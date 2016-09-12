@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
       - name: my-nginx
-        image: {% for host in groups['registry'] %}{{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}:5000/test/nginx{% endfor %}
+        image: {% for host in groups['registry'] %}{{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}{% endfor %}:5000/test/nginx
         ports:
         - containerPort: 80
 

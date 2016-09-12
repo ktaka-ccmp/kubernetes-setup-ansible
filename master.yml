@@ -24,7 +24,7 @@
 
   - apt: upgrade=yes
 
-  - local_action: file path=/root/PKI state=directory
+  - local_action: file path=/root/PKI state=directory mode=700
 
   - local_action: stat path=/root/PKI/ca.key 
     register: cakey
@@ -33,6 +33,8 @@
 
   - local_action: shell openssl genrsa -out /root/PKI/ca.key 2048
     when: not cakey.stat.exists
+  - local_action: file path=/root/PKI/ca.key state=file mode=700
+
   - local_action: shell openssl req -x509 -new -nodes -key /root/PKI/ca.key -subj "/CN={{ ansible_eth0.ipv4.address }}" -days 10000 -out /root/PKI/ca.crt
     when: (not cacrt.stat.exists) or (not cakey.stat.exists)
 

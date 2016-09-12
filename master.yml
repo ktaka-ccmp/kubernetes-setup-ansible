@@ -1,5 +1,5 @@
 # Usage:
-#  ansible-playbook -i ./hosts ./main.yml -vv
+#  ansible-playbook -i ./hosts ./master.yml -vv
 #
 
 - hosts: masters

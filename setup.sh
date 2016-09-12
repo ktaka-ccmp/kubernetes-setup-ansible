@@ -16,6 +16,6 @@ for hst in $HOSTS ; do
 	ssh $hst "hostname; uptime" || exit
 done
 
-ansible-playbook -i ./hosts ./main.yml -vv
+ansible-playbook -i ./hosts ./master.yml -vv
 ansible-playbook -i ./hosts ./node.yml -vv
 

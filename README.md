@@ -5,8 +5,8 @@
 First clone the repo.
 
 ```
-git clone git@github.com:ktaka-ccmp/kubernetes-setup.git \
-&& cd kubernetes-setup 
+git clone git@github.com:ktaka-ccmp/kubernetes-setup-ansible.git \
+&& cd kubernetes-setup-ansible 
 ```
 
 Then edit the inventory file.

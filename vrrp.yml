@@ -44,6 +44,9 @@
     notify:
     - restart vrrp
 
+###### LAbel
+  - local_action: shell kubectl label node {{ inventory_hostname }} role=ingress --overwrite
+
   handlers:
 
   - name: restart vrrp

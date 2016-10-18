@@ -51,7 +51,6 @@
 
   - unarchive: src=./files/common/usr/local/bin/{{ item }} dest=/usr/local/bin/
     with_items:
-      - flanneld.tar.xz
       - etcdctl.tar.xz
       - etcd.tar.xz
       - hyperkube.tar.xz

@@ -4,5 +4,6 @@ exec 2>&1
 exec /usr/bin/dockerd \
         --iptables=false \
         --ip-masq=false \
-        --bridge="cbr0"
+        --bridge="cbr0" \
+	--insecure-registry {% for host in groups['registry'] %} {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}:5000 {% endfor %}
 

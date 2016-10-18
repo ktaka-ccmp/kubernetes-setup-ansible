@@ -49,7 +49,7 @@
   - apt: update_cache=yes
   - apt: upgrade=yes
   - apt: pkg=docker-engine state=present
-  - systemd: name=docker state=stopped enabled=no masked=yes
+  - service: name=docker state=stopped enabled=no
 
 ########## 
 

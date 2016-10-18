@@ -50,6 +50,8 @@
   - apt: upgrade=yes
   - apt: pkg=docker-engine state=present
   - service: name=docker state=stopped enabled=no
+  - shell: /sbin/ip link del dev docker0
+    ignore_errors: yes
 
 ########## 
 

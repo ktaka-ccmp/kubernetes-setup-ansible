@@ -13,17 +13,3 @@
     with_items:
       - netcat
 
-  - shell: ip link add dev macvlan0 link eth0 type macvlan mode bridge
-    ignore_errors: yes
-
-  - shell: brctl addif docker0  macvlan0
-    ignore_errors: yes
-
-  - shell: ip link set dev macvlan0 up
-    ignore_errors: yes
-
-  - sysctl: name="net.ipv4.conf.eth0.proxy_arp" value=0 sysctl_set=yes state=present reload=yes
-
-  - shell: ip route add 172.16.1.251/32 dev docker0
-    ignore_errors: yes
-

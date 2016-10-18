@@ -115,6 +115,14 @@
 && docker tag test/nginx {{ ansible_eth0.ipv4.address }}:5000/test/nginx \
 && docker push {{ ansible_eth0.ipv4.address }}:5000/test/nginx '
 
+  - file: path=/root/registry/vrrp state=directory mode=0755
+  - template: src=files/registry/vrrp/Dockerfile dest=/root/registry/vrrp/Dockerfile
+  - template: src=files/registry/vrrp/vrrp.conf dest=/root/registry/vrrp/vrrp.conf
+
+  - shell: 'cd /root/registry/vrrp && docker build -t test/keepalived . \
+&& docker tag test/keepalived {{ ansible_eth0.ipv4.address }}:5000/test/keepalived \
+&& docker push {{ ansible_eth0.ipv4.address }}:5000/test/keepalived '
+
 
   - local_action: file path=~/KUBE_TEST state=directory mode=755
 

@@ -1,7 +1,10 @@
 #!/bin/bash 
 
-pip install markupsafe ansible
-pip install cryptography
+sudo aptitude install python-pip python-dev -y
+sudo aptitude install gcc libffi-dev libssl-dev git -y
+
+sudo pip install markupsafe ansible
+sudo pip install cryptography
 
 HOSTS_FILE=./hosts
 HOSTS=$(sed "/^\[.*\]$/d" $HOSTS_FILE|sort -u )

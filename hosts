@@ -1,12 +1,12 @@
 [registry]
-v010 ansible_host=10.0.10.0
+10.0.10.0
 
 [masters]
-v010
+10.0.10.0
 
 [nodes]
-v011
+10.0.11.0
 
 [lvs]
-v015 ansible_host=10.0.15.0
+10.0.15.0
 

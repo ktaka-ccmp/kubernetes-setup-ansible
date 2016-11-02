@@ -3,7 +3,7 @@
 #
 
 - hosts: nodes
-  remote_user: root
+  sudo: yes
 
   vars:
     kube_daemons: [ 'kubelet', 'proxy' ]

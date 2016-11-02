@@ -3,7 +3,8 @@
 #
 
 - hosts: masters
-  remote_user: root
+  sudo: yes
+  sudo_user: root
 
   vars:
     daemons: [ 'etcd', 'apiserver', 'controller-manager', 'scheduler' ]
@@ -24,7 +25,7 @@
 
   - apt: upgrade=yes
 
-  - local_action: file path=/root/KUBE_PKI state=directory mode=700
+  - local_action: file path=/root/KUBE_PKI state=directory
 
   - local_action: stat path=/root/KUBE_PKI/ca.key 
     register: cakey
@@ -102,15 +103,16 @@
   - apt: upgrade=yes
   - apt: pkg=docker-engine state=present
 
-  - template: src=files/master/etc/systemd/system/multi-user.target.wants/docker.service dest=/etc/systemd/system/multi-user.target.wants/docker.service
+  - template: src=files/master/lib/systemd/system/docker.service dest=/lib/systemd/system/docker.service
   - shell: systemctl daemon-reload
   - service: state=restarted name=docker
 
   - file: path=/root/registry/nginx state=directory mode=0755
   - template: src=files/registry/nginx/Dockerfile dest=/root/registry/nginx/Dockerfile
 
+
   - shell: 'docker run -d -p 5000:5000 -v /var/opt:/var/lib/registry registry \
-&& cd /root/registry/nginx && docker build -t test/nginx . \
+&& docker build -t test/nginx /root/registry/nginx \
 && docker tag test/nginx {{ ansible_eth0.ipv4.address }}:5000/test/nginx \
 && docker push {{ ansible_eth0.ipv4.address }}:5000/test/nginx '
 
@@ -118,7 +120,7 @@
   - template: src=files/registry/vrrp/Dockerfile dest=/root/registry/vrrp/Dockerfile
   - template: src=files/registry/vrrp/vrrp.conf dest=/root/registry/vrrp/vrrp.conf
 
-  - shell: 'cd /root/registry/vrrp && docker build -t test/keepalived . \
+  - shell: 'docker build -t test/keepalived /root/registry/vrrp \
 && docker tag test/keepalived {{ ansible_eth0.ipv4.address }}:5000/test/keepalived \
 && docker push {{ ansible_eth0.ipv4.address }}:5000/test/keepalived '
 

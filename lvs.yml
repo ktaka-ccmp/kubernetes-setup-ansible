@@ -3,7 +3,7 @@
 #
 
 - hosts: lvs
-  remote_user: root
+  sudo: yes
 
   tasks:
 

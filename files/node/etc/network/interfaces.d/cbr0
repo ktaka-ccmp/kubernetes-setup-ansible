@@ -1,0 +1,7 @@
+auto cbr0
+iface cbr0 inet dhcp
+        bridge_ports    eth0
+        bridge_stp      off
+        bridge_maxwait  2
+	pre-up /sbin/ip link set dev eth0 up
+

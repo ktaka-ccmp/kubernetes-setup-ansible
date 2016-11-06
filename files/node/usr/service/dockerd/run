@@ -1,10 +1,17 @@
 #!/bin/bash
 
+flannel_env=/run/flannel/subnet.env
+
+while [ ! -f $flannel_env ] ; do
+	sleep 2
+	echo Waiting for flanneld to come up.
+done
+
+eval $(cat $flannel_env)
+
 exec 2>&1
 exec /usr/bin/dockerd \
-        --iptables=false \
-        --ip-masq=false \
-        --bridge="cbr0" \
-	--fixed-cidr={{ ansible_default_ipv4.address }}/24 \
+	--iptables=false \
+	--bip=${FLANNEL_SUBNET} --mtu=${FLANNEL_MTU} --ip-masq=${FLANNEL_IPMASQ} \
 	--insecure-registry {% for host in groups['registry'] %} {{ hostvars[host]['ansible_default_ipv4']['address'] }}:5000 {% endfor %}
 

@@ -7,7 +7,7 @@
 
   vars:
     kube_daemons: [ 'kubelet', 'proxy' ]
-    other_daemons: [ 'dockerd' ]
+    other_daemons: [ 'flanneld', 'dockerd' ]
     packages: 
       - apt-transport-https
       - ca-certificates
@@ -52,8 +52,9 @@
   - apt: upgrade=yes
   - apt: pkg=docker-engine state=present
   - service: name=docker state=stopped enabled=no
-  - shell: /sbin/ip link del dev docker0
-    ignore_errors: yes
+  - shell: /bin/systemctl mask docker
+#  - shell: /sbin/ip link del dev docker0
+#    ignore_errors: yes
 
 ########## 
 
@@ -61,6 +62,9 @@
     with_items:
       - hyperkube.tar.xz
       - etcdctl.tar.xz
+      - flanneld.tar.xz
+
+
 
   - file: src=hyperkube dest=/usr/local/bin/{{ item }} state=link
     with_items:
@@ -100,16 +104,16 @@
   - copy: src=./files/node/etc/default/grub dest=/etc/default/grub 
   - shell: update-grub
 
-  - copy: src=./files/node/etc/network/interfaces.d/cbr0 dest=/etc/network/interfaces.d/cbr0
-  - copy: src=./files/node/etc/network/interfaces dest=/etc/network/interfaces
+#  - copy: src=./files/node/etc/network/interfaces.d/cbr0 dest=/etc/network/interfaces.d/cbr0
+#  - copy: src=./files/node/etc/network/interfaces dest=/etc/network/interfaces
 
-  - name: restart machine
-    shell: sleep 2 && shutdown -r now "Ansible updates triggered"
-    async: 1
-    poll: 0
-    sudo: true
-    ignore_errors: true
+#  - name: restart machine
+#    shell: sleep 2 && shutdown -r now "Ansible updates triggered"
+#    async: 1
+#    poll: 0
+#    sudo: true
+#    ignore_errors: true
 
-  - name: waiting for server to come back
-    local_action: wait_for host={{ inventory_hostname }} state=started delay=30 timeout=60
+#  - name: waiting for server to come back
+#    local_action: wait_for host={{ inventory_hostname }} state=started delay=30 timeout=60
 

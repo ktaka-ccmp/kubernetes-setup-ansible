@@ -94,7 +94,7 @@
 
   - shell: 'svc -t /etc/service/* ; sleep 3'
 
-  - shell: "etcdctl set /coreos.com/network/config '{\"Network\":\"10.0.0.0/16\",\"SubnetLen\":24,\"Backend\":{\"Type\": \"host-gw\"}}'"
+  - shell: "etcdctl set /coreos.com/network/config '{\"Network\":\"172.16.0.0/16\",\"SubnetLen\":24,\"Backend\":{\"Type\": \"host-gw\"}}'"
 
   - file: path=/etc/apt/sources.list.d/ state=directory mode=0755
   - template: src=./files/common/etc/apt/sources.list.d/docker.list  dest=/etc/apt/sources.list.d/docker.list

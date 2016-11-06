@@ -13,3 +13,7 @@
     with_items:
       - netcat
 
+  - local_action: shell kubectl label node {{ ansible_hostname }} role=lvs --overwrite
+
+  - shell: ip route add 10.0.127.251/32 dev docker0
+

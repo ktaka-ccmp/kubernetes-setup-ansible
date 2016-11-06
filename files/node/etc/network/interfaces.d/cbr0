@@ -4,4 +4,3 @@ iface cbr0 inet dhcp
         bridge_stp      off
         bridge_maxwait  2
 	pre-up /sbin/ip link set dev eth0 up
-

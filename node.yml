@@ -14,6 +14,8 @@
       - bridge-utils
       - sudo
       - aptitude
+      - libpam-systemd
+      - tcpdump
 
   tasks:
 
@@ -29,16 +31,16 @@
 
   - local_action: file path=/var/lib/KUBE_PKI state=directory
 
-  - local_action: template src=files/pki/openssl.cnf dest=/var/lib/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.cnf
-  - local_action: shell openssl genrsa -out /var/lib/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.key 2048
-  - local_action: shell openssl req -new -key /var/lib/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.key -subj "/CN={{ ansible_eth0.ipv4.address }}" -out /var/lib/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.csr -config /var/lib/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.cnf
-  - local_action: shell openssl x509 -req -in /var/lib/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.csr -CA /var/lib/KUBE_PKI/ca.crt -CAkey /var/lib/KUBE_PKI/ca.key -CAcreateserial -out /var/lib/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.crt -days 10000  -extensions v3_req -extfile /var/lib/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.cnf
+  - local_action: template src=files/pki/openssl.cnf dest=/var/lib/KUBE_PKI/{{ ansible_default_ipv4.address }}.cnf
+  - local_action: shell openssl genrsa -out /var/lib/KUBE_PKI/{{ ansible_default_ipv4.address }}.key 2048
+  - local_action: shell openssl req -new -key /var/lib/KUBE_PKI/{{ ansible_default_ipv4.address }}.key -subj "/CN={{ ansible_default_ipv4.address }}" -out /var/lib/KUBE_PKI/{{ ansible_default_ipv4.address }}.csr -config /var/lib/KUBE_PKI/{{ ansible_default_ipv4.address }}.cnf
+  - local_action: shell openssl x509 -req -in /var/lib/KUBE_PKI/{{ ansible_default_ipv4.address }}.csr -CA /var/lib/KUBE_PKI/ca.crt -CAkey /var/lib/KUBE_PKI/ca.key -CAcreateserial -out /var/lib/KUBE_PKI/{{ ansible_default_ipv4.address }}.crt -days 10000  -extensions v3_req -extfile /var/lib/KUBE_PKI/{{ ansible_default_ipv4.address }}.cnf
 
   - file: path=/var/lib/kubelet/tls state=directory
   - copy: src=./files/node/var/lib/kubelet/kubeconfig dest=/var/lib/kubelet/kubeconfig
   - copy: src=/var/lib/KUBE_PKI/ca.crt dest=/var/lib/kubelet/tls/ca.crt mode=0700
-  - copy: src=/var/lib/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.key dest=/var/lib/kubelet/tls/kubelet.key mode=0700
-  - copy: src=/var/lib/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.crt dest=/var/lib/kubelet/tls/kubelet.crt mode=0700
+  - copy: src=/var/lib/KUBE_PKI/{{ ansible_default_ipv4.address }}.key dest=/var/lib/kubelet/tls/kubelet.key mode=0700
+  - copy: src=/var/lib/KUBE_PKI/{{ ansible_default_ipv4.address }}.crt dest=/var/lib/kubelet/tls/kubelet.crt mode=0700
 
 ####################### docker-engine
 
@@ -98,6 +100,9 @@
   - copy: src=./files/node/etc/default/grub dest=/etc/default/grub 
   - shell: update-grub
 
+  - copy: src=./files/node/etc/network/interfaces.d/cbr0 dest=/etc/network/interfaces.d/cbr0
+  - copy: src=./files/node/etc/network/interfaces dest=/etc/network/interfaces
+
   - name: restart machine
     shell: sleep 2 && shutdown -r now "Ansible updates triggered"
     async: 1
@@ -107,7 +112,4 @@
 
   - name: waiting for server to come back
     local_action: wait_for host={{ inventory_hostname }} state=started delay=30 timeout=60
-
-  - copy: src=./files/node/etc/network/interfaces.d/cbr0 dest=/etc/network/interfaces.d/cbr0
-  - shell: /sbin/ifup cbr0
 

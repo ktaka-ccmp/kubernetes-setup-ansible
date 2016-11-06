@@ -14,6 +14,7 @@
       - bridge-utils
       - sudo
       - aptitude
+      - libpam-systemd
 
   tasks:
 
@@ -36,18 +37,18 @@
     when: not cakey.stat.exists
   - local_action: file path=/var/lib/KUBE_PKI/ca.key state=file mode=700
 
-  - local_action: shell openssl req -x509 -new -nodes -key /var/lib/KUBE_PKI/ca.key -subj "/CN={{ ansible_eth0.ipv4.address }}" -days 10000 -out /var/lib/KUBE_PKI/ca.crt
+  - local_action: shell openssl req -x509 -new -nodes -key /var/lib/KUBE_PKI/ca.key -subj "/CN={{ ansible_default_ipv4.address }}" -days 10000 -out /var/lib/KUBE_PKI/ca.crt
     when: (not cacrt.stat.exists) or (not cakey.stat.exists)
 
-  - local_action: template src=files/pki/openssl.cnf dest=/var/lib/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.cnf
-  - local_action: shell openssl genrsa -out /var/lib/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.key 2048
-  - local_action: shell openssl req -new -key /var/lib/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.key -subj "/CN={{ ansible_eth0.ipv4.address }}" -out /var/lib/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.csr -config /var/lib/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.cnf
-  - local_action: shell openssl x509 -req -in /var/lib/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.csr -CA /var/lib/KUBE_PKI/ca.crt -CAkey /var/lib/KUBE_PKI/ca.key -CAcreateserial -out /var/lib/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.crt -days 10000  -extensions v3_req -extfile /var/lib/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.cnf
+  - local_action: template src=files/pki/openssl.cnf dest=/var/lib/KUBE_PKI/{{ ansible_default_ipv4.address }}.cnf
+  - local_action: shell openssl genrsa -out /var/lib/KUBE_PKI/{{ ansible_default_ipv4.address }}.key 2048
+  - local_action: shell openssl req -new -key /var/lib/KUBE_PKI/{{ ansible_default_ipv4.address }}.key -subj "/CN={{ ansible_default_ipv4.address }}" -out /var/lib/KUBE_PKI/{{ ansible_default_ipv4.address }}.csr -config /var/lib/KUBE_PKI/{{ ansible_default_ipv4.address }}.cnf
+  - local_action: shell openssl x509 -req -in /var/lib/KUBE_PKI/{{ ansible_default_ipv4.address }}.csr -CA /var/lib/KUBE_PKI/ca.crt -CAkey /var/lib/KUBE_PKI/ca.key -CAcreateserial -out /var/lib/KUBE_PKI/{{ ansible_default_ipv4.address }}.crt -days 10000  -extensions v3_req -extfile /var/lib/KUBE_PKI/{{ ansible_default_ipv4.address }}.cnf
 
   - file: path=/srv/kubernetes/ state=directory
   - copy: src=/var/lib/KUBE_PKI/ca.crt dest=/srv/kubernetes/ca.crt mode=0700
-  - copy: src=/var/lib/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.key dest=/srv/kubernetes/server.key mode=0700
-  - copy: src=/var/lib/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.crt dest=/srv/kubernetes/server.crt mode=0700
+  - copy: src=/var/lib/KUBE_PKI/{{ ansible_default_ipv4.address }}.key dest=/srv/kubernetes/server.key mode=0700
+  - copy: src=/var/lib/KUBE_PKI/{{ ansible_default_ipv4.address }}.crt dest=/srv/kubernetes/server.crt mode=0700
 
 
   - unarchive: src=./files/common/usr/local/bin/{{ item }} dest=/usr/local/bin/
@@ -113,16 +114,16 @@
 
   - shell: 'docker run -d -p 5000:5000 -v /var/opt:/var/lib/registry registry \
 && docker build -t test/nginx /root/registry/nginx \
-&& docker tag test/nginx {{ ansible_eth0.ipv4.address }}:5000/test/nginx \
-&& docker push {{ ansible_eth0.ipv4.address }}:5000/test/nginx '
+&& docker tag test/nginx {{ ansible_default_ipv4.address }}:5000/test/nginx \
+&& docker push {{ ansible_default_ipv4.address }}:5000/test/nginx '
 
   - file: path=/root/registry/vrrp state=directory mode=0755
   - template: src=files/registry/vrrp/Dockerfile dest=/root/registry/vrrp/Dockerfile
   - template: src=files/registry/vrrp/vrrp.conf dest=/root/registry/vrrp/vrrp.conf
 
   - shell: 'docker build -t test/keepalived /root/registry/vrrp \
-&& docker tag test/keepalived {{ ansible_eth0.ipv4.address }}:5000/test/keepalived \
-&& docker push {{ ansible_eth0.ipv4.address }}:5000/test/keepalived '
+&& docker tag test/keepalived {{ ansible_default_ipv4.address }}:5000/test/keepalived \
+&& docker push {{ ansible_default_ipv4.address }}:5000/test/keepalived '
 
 
   - local_action: file path=~/KUBE_TEST state=directory mode=755

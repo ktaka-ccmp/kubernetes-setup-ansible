@@ -15,5 +15,5 @@
 
   - local_action: shell kubectl label node {{ ansible_hostname }} role=lvs --overwrite
 
-  - shell: ip route add 10.0.127.251/32 dev docker0
+  - shell: ip route add 10.0.128.251/32 dev docker0
 

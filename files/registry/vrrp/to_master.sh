@@ -5,7 +5,7 @@
 
 ALOCID=eipalloc-f919809e
 VIP=10.0.128.251
-REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone |sed -e 's/[a,c]$//')
+REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone |sed -e 's/[a-c]$//')
 
 mac=$(curl -s http://169.254.169.254/latest/meta-data/network/interfaces/macs/)
 ENI=$(curl -s http://169.254.169.254/latest/meta-data/network/interfaces/macs/$mac/interface-id)

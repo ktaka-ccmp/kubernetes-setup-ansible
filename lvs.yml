@@ -5,6 +5,9 @@
 - hosts: lvs
   sudo: yes
 
+  vars_files:
+  - vars.yml
+
   tasks:
 
 ##### keepalived
@@ -15,5 +18,11 @@
 
   - local_action: shell kubectl label node {{ ansible_hostname }} role=lvs --overwrite
 
-  - shell: ip route add 10.0.128.251/32 dev docker0
+  - template: src=./files/node/etc/network/if-up.d/route dest=/etc/network/if-up.d/route mode=0755
+    notify: add route
+
+  handlers:
+
+  - name: add route
+    shell: /etc/network/if-up.d/route
 

@@ -1,0 +1,4 @@
+#!/bin/sh -e
+
+/sbin/ip route add {{ vip }}/32 dev docker0
+

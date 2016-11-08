@@ -5,6 +5,9 @@
 - hosts: nodes
   sudo: yes
 
+  vars_files:
+  - vars.yml
+
   vars:
     kube_daemons: [ 'kubelet', 'proxy' ]
     other_daemons: [ 'flanneld', 'dockerd' ]

@@ -4,3 +4,10 @@ vip: 10.0.128.251
 
 eipalocid: eipalloc-f919809e 
 
+pki_dir: /var/lib/KUBE_PKI
+lock_dir: /var/lib/KUBE_PKI/lock_dir
+
+flannel_iprange: 172.16.0.0/16
+flannel_backend: vxlan
+flannel_subnet_length: 24
+

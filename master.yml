@@ -10,7 +10,7 @@
   - vars.yml
 
   vars:
-    daemons: [ 'etcd', 'apiserver', 'controller-manager', 'scheduler' ]
+    daemons: [ 'etcd', 'apiserver', 'controller-manager', 'scheduler', 'registry' ]
     packages: 
       - apt-transport-https
       - ca-certificates
@@ -53,6 +53,17 @@
   - copy: src={{ pki_dir }}/{{ ansible_default_ipv4.address }}.key dest=/srv/kubernetes/server.key mode=0700
   - copy: src={{ pki_dir }}/{{ ansible_default_ipv4.address }}.crt dest=/srv/kubernetes/server.crt mode=0700
 
+  - file: path=/etc/apt/sources.list.d/ state=directory mode=0755
+  - template: src=./files/common/etc/apt/sources.list.d/docker.list  dest=/etc/apt/sources.list.d/docker.list
+  - shell: apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+
+#  - apt: update_cache=yes
+  - apt: upgrade=yes update_cache=yes
+  - apt: pkg=docker-engine state=present
+
+  - template: src=files/master/lib/systemd/system/docker.service dest=/lib/systemd/system/docker.service
+  - shell: systemctl daemon-reload
+  - service: state=restarted name=docker
 
   - unarchive: src=./files/common/usr/local/bin/{{ item }} dest=/usr/local/bin/
     with_items:
@@ -99,24 +110,10 @@
 
   - shell: "etcdctl set /coreos.com/network/config '{\"Network\":\"{{ flannel_iprange }}\",\"SubnetLen\":{{ flannel_subnet_length }},\"Backend\":{\"Type\": \"{{ flannel_backend }}\"}}'"
 
-  - file: path=/etc/apt/sources.list.d/ state=directory mode=0755
-  - template: src=./files/common/etc/apt/sources.list.d/docker.list  dest=/etc/apt/sources.list.d/docker.list
-  - shell: apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
-
-  - apt: update_cache=yes
-  - apt: upgrade=yes
-  - apt: pkg=docker-engine state=present
-
-  - template: src=files/master/lib/systemd/system/docker.service dest=/lib/systemd/system/docker.service
-  - shell: systemctl daemon-reload
-  - service: state=restarted name=docker
-
   - file: path=/root/registry/nginx state=directory mode=0755
   - template: src=files/registry/nginx/Dockerfile dest=/root/registry/nginx/Dockerfile
 
-
-  - shell: 'docker run -d -p 5000:5000 -v /var/opt:/var/lib/registry registry \
-&& docker build -t test/nginx /root/registry/nginx \
+  - shell: 'docker build -t test/nginx /root/registry/nginx \
 && docker tag test/nginx {{ ansible_default_ipv4.address }}:5000/test/nginx \
 && docker push {{ ansible_default_ipv4.address }}:5000/test/nginx '
 

@@ -18,11 +18,11 @@
 
   - local_action: shell kubectl label node {{ ansible_hostname }} role=lvs --overwrite
 
-  - template: src=./files/node/etc/network/if-up.d/route dest=/etc/network/if-up.d/route mode=0755
+  - template: src=./files/node/etc/network/if-up.d/10route dest=/etc/network/if-up.d/10route mode=0755
     notify: add route
 
   handlers:
 
   - name: add route
-    shell: /etc/network/if-up.d/route
+    shell: /etc/network/if-up.d/10route
 

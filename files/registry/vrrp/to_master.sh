@@ -1,12 +1,11 @@
 #!/bin/bash
 
-ALOCID={{ eipalocid }}
 VIP={{ vip }}
-REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone |sed -e 's/[a-c]$//')
+EIP=104.198.116.75
 
-mac=$(curl -s http://169.254.169.254/latest/meta-data/network/interfaces/macs/)
-ENI=$(curl -s http://169.254.169.254/latest/meta-data/network/interfaces/macs/$mac/interface-id)
+host=$(curl -s -H "Metadata-Flavor: Google"  http://metadata.google.internal/computeMetadata/v1/instance/hostname | cut -f 1 -d ".")
+zone=$(curl -s -H "Metadata-Flavor: Google"  http://metadata.google.internal/computeMetadata/v1/instance/zone| cut -f 4 -d "/")
 
-aws ec2 assign-private-ip-addresses --network-interface-id $ENI --private-ip-addresses $VIP --allow-reassignment --region $REGION
-aws ec2 associate-address --network-interface-id $ENI --allocation-id $ALOCID --private-ip-address  $VIP --allow-reassociation  --region $REGION
+gcloud compute instances delete-access-config $host --zone $zone
+gcloud compute instances add-access-config $host --zone $zone  --address  $EIP
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 VIP={{ vip }}
-EIP=104.198.116.75
+EIP={{ eip }}
 
 host=$(curl -s -H "Metadata-Flavor: Google"  http://metadata.google.internal/computeMetadata/v1/instance/hostname | cut -f 1 -d ".")
 zone=$(curl -s -H "Metadata-Flavor: Google"  http://metadata.google.internal/computeMetadata/v1/instance/zone| cut -f 4 -d "/")

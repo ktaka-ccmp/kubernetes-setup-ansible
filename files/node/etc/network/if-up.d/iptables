@@ -2,14 +2,14 @@
 
 if [ "$IFACE" = "eth0" ] ; then
 
-/sbin/iptables -t mangle  -C PREROUTING -p tcp -m multiport -s 10.0.0.0/8 --dports 80,443 -j MARK --set-mark 443 || \
-/sbin/iptables -t mangle  -A PREROUTING -p tcp -m multiport -s 10.0.0.0/8 --dports 80,443 -j MARK --set-mark 443
+/sbin/iptables -t mangle  -C PREROUTING -p tcp -m multiport -s {{ host_iprange }} --dports 80,443 -j MARK --set-mark 443 || \
+/sbin/iptables -t mangle  -A PREROUTING -p tcp -m multiport -s {{ host_iprange }} --dports 80,443 -j MARK --set-mark 443
 
-/sbin/iptables -t mangle  -C PREROUTING -p tcp -m multiport -s 172.16.0.0/16 --dports 80,443 -j MARK --set-mark 443 || \
-/sbin/iptables -t mangle  -A PREROUTING -p tcp -m multiport -s 172.16.0.0/16 --dports 80,443 -j MARK --set-mark 443
+/sbin/iptables -t mangle  -C PREROUTING -p tcp -m multiport -s {{ flannel_iprange }} --dports 80,443 -j MARK --set-mark 443 || \
+/sbin/iptables -t mangle  -A PREROUTING -p tcp -m multiport -s {{ flannel_iprange }} --dports 80,443 -j MARK --set-mark 443
 
-/sbin/iptables -t nat -C PREROUTING -p tcp -m multiport  -m mark ! --mark 443 --dports 80,443 -j DNAT --to 10.0.128.251 || \
-/sbin/iptables -t nat -I PREROUTING -p tcp -m multiport  -m mark ! --mark 443 --dports 80,443 -j DNAT --to 10.0.128.251
+/sbin/iptables -t nat -C PREROUTING -p tcp -m multiport  -m mark ! --mark 443 --dports 80,443 -j DNAT --to {{ vip }} || \
+/sbin/iptables -t nat -I PREROUTING -p tcp -m multiport  -m mark ! --mark 443 --dports 80,443 -j DNAT --to {{ vip }} 
 
 fi
 

@@ -66,50 +66,53 @@
       - hyperkube.tar.xz
       - etcdctl.tar.xz
       - flanneld.tar.xz
-
-
+    notify: daemon-restart
 
   - file: src=hyperkube dest=/usr/local/bin/{{ item }} state=link
     with_items:
       - "{{ kube_daemons }}"
+    notify: daemon-restart
 
   - file: path=/usr/service/{{ item }}/log state=directory mode=0755
     with_items:
       - "{{ kube_daemons }}"
       - "{{ other_daemons }}"
+    notify: daemon-restart
 
   - template: src=./files/node/usr/service/{{ item }}/run dest=/usr/service/{{ item }}/run mode=0700
     with_items:
       - "{{ kube_daemons }}"
       - "{{ other_daemons }}"
+    notify: daemon-restart
 
   - template: src=./files/node/usr/service/{{ item }}/log/run dest=/usr/service/{{ item }}/log/run mode=0700
     with_items:
       - "{{ kube_daemons }}"
       - "{{ other_daemons }}"
+    notify: daemon-restart
 
   - file: path=/etc/service/ state=directory mode=0755
     with_items:
       - "{{ kube_daemons }}"
       - "{{ other_daemons }}"
+    notify: daemon-restart
 
   - file: src=/usr/service/{{ item }} dest=/etc/service/{{ item }} state=link
     with_items:
       - "{{ kube_daemons }}"
       - "{{ other_daemons }}"
+    notify: daemon-restart
 
   - apt: pkg={{ item }} state=present
     with_items:
       - daemontools-run
-
-  - shell: 'svc -t /etc/service/* ; sleep 3'
+    notify: daemon-restart
 
   - copy: src=./files/node/etc/default/grub dest=/etc/default/grub 
     notify: update-grub
 
 #  - copy: src=./files/node/etc/network/interfaces.d/cbr0 dest=/etc/network/interfaces.d/cbr0
 #  - copy: src=./files/node/etc/network/interfaces dest=/etc/network/interfaces
-
 
 
   handlers:
@@ -128,4 +131,7 @@
 
   - name: wait-server
     local_action: wait_for host={{ inventory_hostname }} port=22 state=started delay=20 timeout=120
+
+  - name: daemon-restart
+    shell: 'svc -t /etc/service/* ; sleep 3'
 

@@ -28,8 +28,12 @@
 
   - name: add route
     shell: /etc/network/if-up.d/route
+    environment:
+      IFACE: eth0
 
   - name: add ipt
     shell: /etc/network/if-up.d/iptables
+    environment:
+      IFACE: eth0
 
 

@@ -1,9 +1,0 @@
-#!/bin/sh -e
-
-if [ "$IFACE" = "eth0" ] ; then
-
-while ! ip link show dev docker0 > /dev/null ; do sleep 1 ; done
-/sbin/ip route add {{ vip }}/32 dev docker0
-
-fi
-

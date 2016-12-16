@@ -8,6 +8,9 @@
   vars_files:
   - vars.yml
 
+  vars:
+    other_daemons: [ 'route' ]
+
   tasks:
 
 ##### keepalived
@@ -18,22 +21,39 @@
 
   - local_action: shell kubectl label node {{ ansible_hostname }} role=lvs --overwrite
 
-  - template: src=./files/node/etc/network/if-up.d/route dest=/etc/network/if-up.d/route mode=0755
-    notify: add route
-
-  - template: src=./files/node/etc/network/if-up.d/iptables dest=/etc/network/if-up.d/iptables mode=0755
+  - template: src=./files/lvs/etc/network/if-up.d/iptables dest=/etc/network/if-up.d/iptables mode=0755
     notify: add ipt
 
-  handlers:
+  - file: path=/usr/service/{{ item }}/log state=directory mode=0755
+    with_items:
+      - "{{ other_daemons }}"
 
-  - name: add route
-    shell: /etc/network/if-up.d/route
-    environment:
-      IFACE: eth0
+  - template: src=./files/lvs/usr/service/{{ item }}/run dest=/usr/service/{{ item }}/run mode=0700
+    with_items:
+      - "{{ other_daemons }}"
+    notify: daemon-restart
+
+  - template: src=./files/lvs/usr/service/{{ item }}/log/run dest=/usr/service/{{ item }}/log/run mode=0700
+    with_items:
+      - "{{ other_daemons }}"
+    notify: daemon-restart
+
+  - file: path=/etc/service/ state=directory mode=0755
+
+  - file: src=/usr/service/{{ item }} dest=/etc/service/{{ item }} state=link
+    with_items:
+      - "{{ other_daemons }}"
+    notify: daemon-restart
+
+  handlers:
 
   - name: add ipt
     shell: /etc/network/if-up.d/iptables
     environment:
       IFACE: eth0
 
+  - name: daemon-restart
+    shell: 'svc -t /etc/service/{{ item }}'
+    with_items:
+      - "{{ other_daemons }}"
 

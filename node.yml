@@ -77,7 +77,6 @@
     with_items:
       - "{{ kube_daemons }}"
       - "{{ other_daemons }}"
-    notify: daemon-restart
 
   - template: src=./files/node/usr/service/{{ item }}/run dest=/usr/service/{{ item }}/run mode=0700
     with_items:
@@ -92,10 +91,6 @@
     notify: daemon-restart
 
   - file: path=/etc/service/ state=directory mode=0755
-    with_items:
-      - "{{ kube_daemons }}"
-      - "{{ other_daemons }}"
-    notify: daemon-restart
 
   - file: src=/usr/service/{{ item }} dest=/etc/service/{{ item }} state=link
     with_items:

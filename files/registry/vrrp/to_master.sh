@@ -4,6 +4,7 @@ VIP={{ vip }}
 EIP={{ eip }}
 EIP_ID={{ eip_id }}
 
+export PATH=$PATH:/google-cloud-sdk/bin
 export https_proxy=http://{{ inventory_hostname }}:8888
 
 #### remove eip from other vm

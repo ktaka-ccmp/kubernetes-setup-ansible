@@ -5,6 +5,8 @@ host_iprange: 10.0.0.0/8
 vip: 10.0.128.251
 eip: 104.198.116.75
 
+eip_id: kt-global-ip-01
+
 eipalocid: eipalloc-f919809e 
 
 pki_dir: /var/lib/KUBE_PKI

@@ -18,6 +18,7 @@
       - sudo
       - aptitude
       - libpam-systemd
+      - tinyproxy
 
   tasks:
 
@@ -135,4 +136,11 @@
       - nginx2.yml
       - nginx3.yml
 
+  - template: src=files/master/etc/tinyproxy.conf dest=/etc/tinyproxy.conf
+    notify: restart-tinyproxy
+
+  handlers:
+
+  - name: restart-tinyproxy
+    service: state=restarted name=tinyproxy
 

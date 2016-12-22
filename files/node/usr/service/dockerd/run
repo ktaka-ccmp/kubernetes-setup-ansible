@@ -11,9 +11,9 @@ eval $(cat $flannel_env)
 
 exec 2>&1
 
-export https_proxy=http://{{ inventory_hostname }}:8888
-export http_proxy=http://{{ inventory_hostname }}:8888
-#export no_proxy={{ inventory_hostname }}:5000
+export https_proxy=http://{{ hostvars[groups['masters'][0]]['ansible_default_ipv4']['address'] }}:8888
+export http_proxy=http://{{ hostvars[groups['masters'][0]]['ansible_default_ipv4']['address'] }}:8888
+#export no_proxy={{ hostvars[groups['masters'][0]]['ansible_default_ipv4']['address'] }}:5000
 
 exec /usr/bin/dockerd \
 	--iptables=false \

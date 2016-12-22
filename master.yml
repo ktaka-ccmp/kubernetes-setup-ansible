@@ -17,6 +17,8 @@
       - sudo
       - aptitude
       - libpam-systemd
+      - tinyproxy
+      - apt-cacher-ng
 
   tasks:
 
@@ -25,6 +27,11 @@
   - apt: pkg={{ item }} state=present
     with_items:
       - "{{ packages }}"
+
+  - template: src=./files/master/etc/apt-cacher-ng/acng.conf dest=/etc/apt-cacher-ng/acng.conf
+    register: result
+  - service: state=restarted name=apt-cacher-ng
+    when: result|succeeded
 
   - apt: upgrade=yes
 

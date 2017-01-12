@@ -10,7 +10,7 @@
   - vars.yml
 
   vars:
-    daemons: [ 'etcd', 'apiserver', 'controller-manager', 'scheduler', 'registry' ]
+    daemons: [ 'etcd', 'apiserver', 'controller-manager', 'scheduler', 'registry', 'calico-node' ]
     packages: 
       - apt-transport-https
       - ca-certificates

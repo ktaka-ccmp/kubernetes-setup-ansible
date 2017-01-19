@@ -10,7 +10,7 @@
 
   vars:
     kube_daemons: [ 'kubelet', 'proxy' ]
-    other_daemons: [ 'flanneld', 'dockerd', 'calico-node' ]
+    other_daemons: [ 'dockerd', 'calico-node' ]
     packages: 
       - apt-transport-https
       - ca-certificates

@@ -1,14 +1,5 @@
 #!/bin/bash
 
-flannel_env=/run/flannel/subnet.env
-
-while [ ! -f $flannel_env ] ; do
-	sleep 2
-	echo Waiting for flanneld to come up.
-done
-
-eval $(cat $flannel_env)
-
 exec 2>&1
 
 export https_proxy=http://{{ hostvars[groups['masters'][0]]['ansible_default_ipv4']['address'] }}:8888
@@ -18,6 +9,5 @@ export http_proxy=http://{{ hostvars[groups['masters'][0]]['ansible_default_ipv4
 exec /usr/bin/dockerd \
 	--iptables=false \
 	--userland-proxy=false \
-	--bip=${FLANNEL_SUBNET} --mtu=${FLANNEL_MTU} --ip-masq=${FLANNEL_IPMASQ} \
 	--insecure-registry {% for host in groups['registry'] %} {{ hostvars[host]['ansible_default_ipv4']['address'] }}:5000 {% endfor %}
 

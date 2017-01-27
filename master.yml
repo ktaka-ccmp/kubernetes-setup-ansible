@@ -118,6 +118,8 @@
 
   - shell: "etcdctl set /coreos.com/network/config '{\"Network\":\"{{ flannel_iprange }}\",\"SubnetLen\":{{ flannel_subnet_length }},\"Backend\":{\"Type\": \"{{ flannel_backend }}\"}}'"
 
+  - shell: "calicoctl pool add {{ container_iprange }} --ipip --nat-outgoing"
+
   - file: path=/root/registry/nginx state=directory mode=0755
   - template: src=files/registry/nginx/Dockerfile dest=/root/registry/nginx/Dockerfile
 

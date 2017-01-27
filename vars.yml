@@ -6,7 +6,7 @@ eipalocid: eipalloc-f919809e
 pki_dir: /var/lib/KUBE_PKI
 lock_dir: /var/lib/KUBE_PKI/lock_dir
 
-container_iprange: 192.168.0.0/16
+container_iprange: 172.16.0.0/16
 
 flannel_iprange: 172.16.0.0/16
 flannel_backend: vxlan

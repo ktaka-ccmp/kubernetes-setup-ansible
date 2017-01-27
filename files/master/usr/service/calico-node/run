@@ -5,7 +5,7 @@ exec /usr/bin/docker run -a stderr -a stdout -i --net=host --privileged --name=c
   -e ETCD_ENDPOINTS={% for host in groups['masters'] %}http://{{ hostvars[host]['ansible_default_ipv4']['address'] }}:2379{% if not loop.last %},{% endif %}{% endfor %} \
   -e NODENAME={{ inventory_hostname }} \
   -e IP= \
-  -e NO_DEFAULT_POOLS= \
+  -e NO_DEFAULT_POOLS=true \
   -e AS= \
   -e CALICO_LIBNETWORK_ENABLED=true \
   -e IP6= \

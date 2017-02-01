@@ -1,0 +1,5 @@
+#!/bin/bash
+
+exec 2>&1
+exec /usr/bin/docker run -a stderr -a stdout -i -p 5000:5000 -v /var/opt:/var/lib/registry registry
+

@@ -6,7 +6,7 @@
   remote_user: root
 
   vars:
-    daemons: [ 'etcd', 'apiserver', 'controller-manager', 'scheduler' ]
+    daemons: [ 'etcd', 'apiserver', 'controller-manager', 'scheduler', 'registry' ]
     packages: 
       - apt-transport-https
       - ca-certificates
@@ -109,8 +109,7 @@
   - file: path=/root/registry/nginx state=directory mode=0755
   - template: src=files/registry/nginx/Dockerfile dest=/root/registry/nginx/Dockerfile
 
-  - shell: 'docker run -d -p 5000:5000 -v /var/opt:/var/lib/registry registry \
-&& cd /root/registry/nginx && docker build -t test/nginx . \
+  - shell: 'docker build -t test/nginx /root/registry/nginx \
 && docker tag test/nginx {{ ansible_default_ipv4.address }}:5000/test/nginx \
 && docker push {{ ansible_default_ipv4.address }}:5000/test/nginx '
 
@@ -118,7 +117,7 @@
   - template: src=files/registry/vrrp/Dockerfile dest=/root/registry/vrrp/Dockerfile
   - template: src=files/registry/vrrp/vrrp.conf dest=/root/registry/vrrp/vrrp.conf
 
-  - shell: 'cd /root/registry/vrrp && docker build -t test/keepalived . \
+  - shell: 'docker build -t test/keepalived /root/registry/vrrp \
 && docker tag test/keepalived {{ ansible_default_ipv4.address }}:5000/test/keepalived \
 && docker push {{ ansible_default_ipv4.address }}:5000/test/keepalived '
 

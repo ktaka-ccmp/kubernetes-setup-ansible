@@ -5,6 +5,9 @@
 - hosts: nodes
   remote_user: root
 
+  vars_files:
+  - vars.yml
+
   vars:
     kube_daemons: [ 'kubelet', 'proxy' ]
     other_daemons: [ 'dockerd' ]
@@ -14,6 +17,8 @@
       - bridge-utils
       - sudo
       - aptitude
+      - libpam-systemd
+      - tcpdump
 
   tasks:
 

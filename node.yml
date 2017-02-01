@@ -7,7 +7,7 @@
 
   vars:
     kube_daemons: [ 'kubelet', 'proxy' ]
-    other_daemons: [ 'flanneld' ]
+    other_daemons: [ 'dockerd' ]
     packages: 
       - apt-transport-https
       - ca-certificates
@@ -25,6 +25,8 @@
 
   - apt: upgrade=yes
 
+########## PKI
+
   - local_action: file path=/root/KUBE_PKI state=directory
 
   - local_action: template src=files/pki/openssl.cnf dest=/root/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.cnf
@@ -38,9 +40,23 @@
   - copy: src=/root/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.key dest=/var/lib/kubelet/tls/kubelet.key mode=0700
   - copy: src=/root/KUBE_PKI/{{ ansible_eth0.ipv4.address }}.crt dest=/var/lib/kubelet/tls/kubelet.crt mode=0700
 
+####################### docker-engine
+
+  - file: path=/etc/apt/sources.list.d/ state=directory mode=0755
+  - template: src=files/common/etc/apt/sources.list.d/docker.list  dest=/etc/apt/sources.list.d/docker.list
+  - shell: apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+
+  - apt: update_cache=yes
+  - apt: upgrade=yes
+  - apt: pkg=docker-engine state=present
+  - service: name=docker state=stopped enabled=no
+  - shell: /sbin/ip link del dev docker0
+    ignore_errors: yes
+
+########## 
+
   - unarchive: src=./files/common/usr/local/bin/{{ item }} dest=/usr/local/bin/
     with_items:
-      - flanneld.tar.xz
       - hyperkube.tar.xz
       - etcdctl.tar.xz
 
@@ -78,19 +94,6 @@
       - daemontools-run
 
   - shell: 'svc -t /etc/service/* ; sleep 3'
-
-#######################
-  - file: path=/etc/apt/sources.list.d/ state=directory mode=0755
-  - template: src=files/common/etc/apt/sources.list.d/docker.list  dest=/etc/apt/sources.list.d/docker.list
-  - shell: apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
-
-  - apt: update_cache=yes
-  - apt: upgrade=yes
-  - apt: pkg=docker-engine state=present
-
-  - template: src=files/node/etc/systemd/system/multi-user.target.wants/docker.service dest=/etc/systemd/system/multi-user.target.wants/docker.service
-  - shell: systemctl daemon-reload
-  - service: state=restarted name=docker
 
 ########################
 

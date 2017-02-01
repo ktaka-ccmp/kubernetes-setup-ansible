@@ -1,9 +1,19 @@
 [registry]
-v200
+v100
 
 [masters]
-v200
+v100
 
 [nodes]
-v201
+v101
+v102
+v103
+v104
+v105
+v051
+v052
+
+[lvs]
+v051
+v052
 

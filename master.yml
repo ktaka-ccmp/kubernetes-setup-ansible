@@ -51,7 +51,6 @@
 
   - unarchive: src=./files/common/usr/local/bin/{{ item }} dest=/usr/local/bin/
     with_items:
-      - flanneld.tar.xz
       - etcdctl.tar.xz
       - etcd.tar.xz
       - hyperkube.tar.xz
@@ -114,6 +113,14 @@
 && cd /root/registry/nginx && docker build -t test/nginx . \
 && docker tag test/nginx {{ ansible_eth0.ipv4.address }}:5000/test/nginx \
 && docker push {{ ansible_eth0.ipv4.address }}:5000/test/nginx '
+
+  - file: path=/root/registry/vrrp state=directory mode=0755
+  - template: src=files/registry/vrrp/Dockerfile dest=/root/registry/vrrp/Dockerfile
+  - template: src=files/registry/vrrp/vrrp.conf dest=/root/registry/vrrp/vrrp.conf
+
+  - shell: 'cd /root/registry/vrrp && docker build -t test/keepalived . \
+&& docker tag test/keepalived {{ ansible_eth0.ipv4.address }}:5000/test/keepalived \
+&& docker push {{ ansible_eth0.ipv4.address }}:5000/test/keepalived '
 
 
   - local_action: file path=~/KUBE_TEST state=directory mode=755

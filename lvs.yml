@@ -1,0 +1,15 @@
+# Usage:
+#  ansible-playbook -i ./hosts ./lvs.yml -vv
+#
+
+- hosts: lvs
+  remote_user: root
+
+  tasks:
+
+##### keepalived
+
+  - apt: pkg={{ item }} state=present
+    with_items:
+      - netcat
+

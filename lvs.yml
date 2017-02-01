@@ -13,3 +13,5 @@
     with_items:
       - netcat
 
+  - local_action: shell kubectl label node {{ ansible_hostname }} role=lvs --overwrite
+

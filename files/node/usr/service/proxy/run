@@ -2,6 +2,6 @@
 
 exec 2>&1
 exec /usr/local/bin/proxy  \
-	--master={% for host in groups['masters'] %}http://{{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}:8080{% if not loop.last %},{% endif %}{% endfor %} \
+	--master={% for host in groups['masters'] %}http://{{ hostvars[host]['ansible_default_ipv4']['address'] }}:8080{% if not loop.last %},{% endif %}{% endfor %} \
 	--v=3 \
 

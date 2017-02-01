@@ -1,0 +1,6 @@
+
+
+pki_dir: /var/lib/KUBE_PKI
+lock_dir: /var/lib/KUBE_PKI/lock_dir
+
+

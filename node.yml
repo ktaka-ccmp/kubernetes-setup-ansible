@@ -40,7 +40,7 @@
   - local_action: shell while ! (mkdir {{ lock_dir }} && openssl x509 -req -in {{ pki_dir }}/{{ ansible_default_ipv4.address }}.csr -CA {{ pki_dir }}/ca.crt -CAkey {{ pki_dir }}/ca.key -CAcreateserial -out {{ pki_dir }}/{{ ansible_default_ipv4.address }}.crt -days 10000  -extensions v3_req -extfile {{ pki_dir }}/{{ ansible_default_ipv4.address }}.cnf && rm -r {{ lock_dir }}) ; do sleep 1 ; done
 
   - file: path=/var/lib/kubelet/tls state=directory
-  - copy: src=./files/node/var/lib/kubelet/kubeconfig dest=/var/lib/kubelet/kubeconfig
+  - template: src=./files/node/var/lib/kubelet/kubeconfig dest=/var/lib/kubelet/kubeconfig
   - copy: src={{ pki_dir }}/ca.crt dest=/var/lib/kubelet/tls/ca.crt mode=0700
   - copy: src={{ pki_dir }}/{{ ansible_default_ipv4.address }}.key dest=/var/lib/kubelet/tls/kubelet.key mode=0700
   - copy: src={{ pki_dir }}/{{ ansible_default_ipv4.address }}.crt dest=/var/lib/kubelet/tls/kubelet.crt mode=0700

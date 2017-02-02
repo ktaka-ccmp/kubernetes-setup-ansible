@@ -61,7 +61,7 @@
 
 ########## 
 
-  - unarchive: src=./files/common/usr/local/bin/{{ item }} dest=/usr/local/bin/ owner=root group=staff
+  - unarchive: src=./files/common/usr/local/bin/{{ item }} dest=/usr/local/bin/ owner=root group=staff mode=0755
     with_items:
       - hyperkube.tar.xz
       - etcdctl.tar.xz

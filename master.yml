@@ -9,6 +9,9 @@
   vars_files:
   - vars.yml
 
+  vars_files:
+  - vars.yml
+
   vars:
     daemons: [ 'etcd', 'apiserver', 'controller-manager', 'scheduler', 'registry' ]
     packages: 

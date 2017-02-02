@@ -60,7 +60,7 @@
   - copy: src={{ pki_dir }}/{{ ansible_default_ipv4.address }}.crt dest=/srv/kubernetes/server.crt mode=0700
 
 
-  - unarchive: src=./files/common/usr/local/bin/{{ item }} dest=/usr/local/bin/
+  - unarchive: src=./files/common/usr/local/bin/{{ item }} dest=/usr/local/bin/ owner=root group=staff
     with_items:
       - etcdctl.tar.xz
       - etcd.tar.xz

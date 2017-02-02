@@ -1,0 +1,15 @@
+#!/bin/bash
+
+cat <<EOF > ./route.sh
+#!/bin/bash
+
+while true ; do sleep 1 
+/sbin/ip route replace {{ vip }}/32 dev docker0
+done
+
+EOF
+
+chmod +x ./route.sh
+
+exec 2>&1
+exec ./route.sh

@@ -41,7 +41,7 @@
   - local_action: shell while ! (mkdir {{ lock_dir }} && openssl x509 -req -in {{ pki_dir }}/{{ ansible_default_ipv4.address }}.csr -CA {{ pki_dir }}/ca.crt -CAkey {{ pki_dir }}/ca.key -CAcreateserial -out {{ pki_dir }}/{{ ansible_default_ipv4.address }}.crt -days 10000  -extensions v3_req -extfile {{ pki_dir }}/{{ ansible_default_ipv4.address }}.cnf && rm -r {{ lock_dir }}) ; do sleep 1 ; done
 
   - file: path=/var/lib/kubelet/tls state=directory
-  - copy: src=./files/node/var/lib/kubelet/kubeconfig dest=/var/lib/kubelet/kubeconfig
+  - template: src=./files/node/var/lib/kubelet/kubeconfig dest=/var/lib/kubelet/kubeconfig
   - copy: src={{ pki_dir }}/ca.crt dest=/var/lib/kubelet/tls/ca.crt mode=0700
   - copy: src={{ pki_dir }}/{{ ansible_default_ipv4.address }}.key dest=/var/lib/kubelet/tls/kubelet.key mode=0700
   - copy: src={{ pki_dir }}/{{ ansible_default_ipv4.address }}.crt dest=/var/lib/kubelet/tls/kubelet.crt mode=0700
@@ -52,8 +52,7 @@
   - template: src=files/common/etc/apt/sources.list.d/docker.list  dest=/etc/apt/sources.list.d/docker.list
   - shell: while ! apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --keyserver-option http-proxy=http://{{ hostvars[groups['masters'][0]]['ansible_default_ipv4']['address'] }}:8888 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D  ; do echo retrying ; sleep 1 ; done
 
-  - apt: update_cache=yes
-  - apt: upgrade=yes
+  - apt: upgrade=yes update_cache=yes
   - apt: pkg=docker-engine state=present
   - service: name=docker state=stopped enabled=no
   - shell: /bin/systemctl mask docker

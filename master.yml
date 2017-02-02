@@ -72,7 +72,7 @@
   - shell: systemctl daemon-reload
   - service: state=restarted name=docker
 
-  - unarchive: src=./files/common/usr/local/bin/{{ item }} dest=/usr/local/bin/ owner=root group=staff
+  - unarchive: src=./files/common/usr/local/bin/{{ item }} dest=/usr/local/bin/ owner=root group=staff mode=0755
     with_items:
       - etcdctl.tar.xz
       - etcd.tar.xz

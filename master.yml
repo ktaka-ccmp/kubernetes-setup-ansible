@@ -148,6 +148,9 @@
   - template: src=files/master/etc/tinyproxy.conf dest=/etc/tinyproxy.conf
     notify: restart-tinyproxy
 
+  - local_action: shell ./etc_hosts.gen
+  - copy src=files/common/etc/hosts dest=/etc/hosts
+
   handlers:
 
   - name: restart-tinyproxy

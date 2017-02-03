@@ -1,0 +1,8 @@
+#!/bin/bash
+
+inventory=./hosts
+hosts=./files/common/etc/hosts
+
+echo 127.0.0.1 localhost > $hosts
+egrep -v "^\[|^$" $inventory | sed  -e 's/\(.*\)\.\(.*\)\.\(.*\)\.\(.*\)/\1\.\2\.\3\.\4 ip-\1-\2-\3-\4/g' >> $hosts
+

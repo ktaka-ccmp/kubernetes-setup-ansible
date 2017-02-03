@@ -23,7 +23,6 @@
 
   tasks:
 
-  - local_action: shell ./etc_hosts.gen
   - copy: src=files/common/etc/hosts dest=/etc/hosts
   - template: src=files/common/etc/hostname dest=/etc/hostname
 

@@ -19,6 +19,11 @@ for hst in $HOSTS ; do
 	ssh $hst "hostname; uptime" || exit
 done
 
+hosts=./files/common/etc/hosts
+
+echo 127.0.0.1 localhost > $hosts
+egrep -v "^\[" $HOSTS_FILE |sed -e 's/^\(.*\) ansible_host=\(.*\)/\2 \1/g' >> $hosts
+
 ansible-playbook -i ./hosts ./master.yml -vv
 ansible-playbook -i ./hosts ./node.yml -vv
 ansible-playbook -i ./hosts ./lvs.yml -vv

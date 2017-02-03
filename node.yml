@@ -144,3 +144,6 @@
   - name: wait-server
     local_action: wait_for host={{ inventory_hostname }} port=22 state=started delay=20 timeout=120
 
+  - name: daemon-restart
+    shell: 'svc -t /etc/service/* ; sleep 3'
+

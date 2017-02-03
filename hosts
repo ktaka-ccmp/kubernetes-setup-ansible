@@ -1,15 +1,15 @@
 [registry]
-10.0.0.10
+ip-10-0-0-10 ansible_host=10.0.0.10
 
 [masters]
-10.0.0.10
+ip-10-0-0-10 ansible_host=10.0.0.10
 
 [nodes]
-10.0.0.11
-10.0.0.12
-10.0.0.13
-10.0.128.11
+ip-10-0-0-11 ansible_host=10.0.0.11
+ip-10-0-0-12 ansible_host=10.0.0.12
+ip-10-0-0-13 ansible_host=10.0.0.13
+ip-10-0-128-11 ansible_host=10.0.128.11
 
 [lvs]
-10.0.128.11
+ip-10-0-128-11 ansible_host=10.0.128.11
 

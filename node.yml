@@ -22,6 +22,10 @@
 
   tasks:
 
+  - local_action: shell ./etc_hosts.gen
+  - copy: src=files/common/etc/hosts dest=/etc/hosts
+  - template: src=files/common/etc/hostname dest=/etc/hostname
+
   - template: src=files/node/etc/apt/apt.conf dest=/etc/apt/apt.conf
   - apt: update_cache=yes
 
@@ -123,7 +127,6 @@
     notify: daemon-restart
 
   - template: src=./files/node/etc/cni/net.d/10-calico.conf dest=/etc/cni/net.d/10-calico.conf
-
 
   handlers:
 

@@ -23,6 +23,9 @@
 
   tasks:
 
+  - copy: src=files/common/etc/hosts dest=/etc/hosts
+  - template: src=files/common/etc/hostname dest=/etc/hostname
+
   - apt: update_cache=yes
 
   - apt: pkg={{ item }} state=present

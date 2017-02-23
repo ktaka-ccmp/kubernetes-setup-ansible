@@ -18,4 +18,4 @@ flannel_iprange: 172.16.0.0/16
 flannel_backend: vxlan
 flannel_subnet_length: 24
 
-
+key_server: pgp.mit.edu

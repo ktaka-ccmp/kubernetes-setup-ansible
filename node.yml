@@ -103,8 +103,8 @@
       - daemontools-run
     notify: daemon-restart
 
-  - copy: src=./files/node/etc/default/grub dest=/etc/default/grub 
-    notify: update-grub
+#  - copy: src=./files/node/etc/default/grub dest=/etc/default/grub 
+#    notify: update-grub
 
 #  - copy: src=./files/node/etc/network/interfaces.d/cbr0 dest=/etc/network/interfaces.d/cbr0
 #  - copy: src=./files/node/etc/network/interfaces dest=/etc/network/interfaces

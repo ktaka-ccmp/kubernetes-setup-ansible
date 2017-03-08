@@ -1,17 +1,19 @@
 [registry]
-kt-v010
+v010.1
 
 [masters]
-kt-v010
+v010.1
 
 [nodes]
-kt-v011
-kt-v012
-kt-v013
-kt-lvs010
-kt-lvs011
+v011.2
+v012.2
+v013.2
+v014.2
+v015.2
+v011.1
+v012.1
 
 [lvs]
-kt-lvs010
-kt-lvs011
+v011.1
+v012.1
 

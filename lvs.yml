@@ -9,7 +9,7 @@
   - vars.yml
 
   vars:
-    other_daemons: [ '' ]
+    other_daemons: [ ]
 
   tasks:
 

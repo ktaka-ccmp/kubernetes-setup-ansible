@@ -15,6 +15,6 @@ exec /usr/local/bin/apiserver \
 	--service-account-key-file=/srv/kubernetes/server.key \
 	--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota \
 	--cloud-provider="" \
-	--allow-privileged=true \
-	--v 2
+	--v 2 \
+#	--allow-privileged=true \
 

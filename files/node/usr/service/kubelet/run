@@ -4,6 +4,6 @@ exec 2>&1
 exec /usr/local/bin/kubelet  \
         --api-servers={% for host in groups['masters'] %}https://{{ hostvars[host]['ansible_default_ipv4']['address'] }}:443{% if not loop.last %},{% endif %}{% endfor %} \
 	--kubeconfig=/var/lib/kubelet/kubeconfig \
-	--allow-privileged=true \
-	--v 2
+	--v 2 \
+#	--allow-privileged=true \
 

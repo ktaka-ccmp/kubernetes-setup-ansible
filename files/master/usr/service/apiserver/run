@@ -16,5 +16,5 @@ exec /usr/local/bin/apiserver \
 	--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota \
 	--cloud-provider="" \
 	--v 2 \
-#	--allow-privileged=true \
+	--allow-privileged=true \
 

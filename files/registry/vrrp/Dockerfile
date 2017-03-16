@@ -9,8 +9,7 @@ RUN cd / && /google-cloud-sdk/bin/gcloud components update --quiet
 RUN mkdir -p /etc/keepalived/vrrp/
 COPY vrrp.conf /etc/keepalived/vrrp/
 COPY to_master.sh /etc/keepalived/vrrp/
+COPY to_backup.sh /etc/keepalived/vrrp/
 
-CMD /usr/sbin/keepalived -nlDP -f /etc/keepalived/vrrp/vrrp.conf 
-
-
+CMD /sbin/ip netns exec node /usr/sbin/keepalived -nlDP -f /etc/keepalived/vrrp/vrrp.conf
 

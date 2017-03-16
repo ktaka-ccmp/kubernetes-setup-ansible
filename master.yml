@@ -128,6 +128,7 @@
   - template: src=files/registry/vrrp/Dockerfile dest=/root/registry/vrrp/Dockerfile
   - template: src=files/registry/vrrp/vrrp.conf dest=/root/registry/vrrp/vrrp.conf
   - template: src=files/registry/vrrp/to_master.sh dest=/root/registry/vrrp/to_master.sh mode=0755
+  - template: src=files/registry/vrrp/to_backup.sh dest=/root/registry/vrrp/to_backup.sh mode=0755
 
   - shell: 'docker build -t test/keepalived /root/registry/vrrp \
 && docker tag test/keepalived {{ ansible_default_ipv4.address }}:5000/test/keepalived \

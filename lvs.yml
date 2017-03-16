@@ -42,6 +42,15 @@
       - "{{ other_daemons }}"
     notify: daemon-restart
 
+### This is required for keepalived in default net_ns
+  - sysctl:
+      name: net.ipv4.igmp_max_memberships
+      value: 20
+
+  - sysctl:
+      name: net.ipv4.conf.eth0.proxy_arp
+      value: 1
+
   handlers:
 
   - name: daemon-restart

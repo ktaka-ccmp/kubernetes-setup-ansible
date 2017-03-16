@@ -1,13 +1,30 @@
 [registry]
-kt-v010
+kt-v100
 
 [masters]
-kt-v010
+kt-v100
 
 [nodes]
-kt-v011
-kt-v012
-kt-v013
+kt-v101
+kt-v102
+kt-v103
+kt-v104
+kt-v105
+kt-v106
+kt-v107
+kt-v108
+kt-v109
+kt-v110
+kt-v111
+kt-v112
+kt-v113
+kt-v114
+kt-v115
+kt-v116
+kt-v117
+kt-v118
+kt-v119
+kt-v120
 kt-lvs010
 kt-lvs011
 

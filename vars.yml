@@ -3,7 +3,7 @@
 host_iprange: 10.0.0.0/8
 
 vip: 10.0.128.251
-eip: 35.186.196.144
+eip: 104.196.229.104
 
 eip_id: kt-global-ip-03
 

@@ -1,0 +1,11 @@
+# Usage:
+#  ansible-playbook -i ./hosts ./label.yml -vv
+#
+
+- hosts: nodes
+  sudo: yes
+
+  tasks:
+
+  - local_action: shell kubectl label node {{ ansible_hostname }} role=web --overwrite
+

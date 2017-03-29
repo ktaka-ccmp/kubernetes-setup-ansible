@@ -1,0 +1,39 @@
+#!/bin/bash
+
+###generate ipvs.conf
+conf=/etc/keepalived/ipvs.conf 
+
+cat<<EOF> $conf
+virtual_server 10.0.255.11 8888 {
+    delay_loop 5
+    lb_algo wlc
+    lb_kind NAT
+    protocol TCP
+        alpha
+
+EOF
+
+for sv in  $(/usr/local/bin/kubectl get pod -o wide -s http://10.0.0.100:8080 |grep coffe | awk '{print $6}') ; do
+
+cat<<EOF>> $conf
+    real_server $sv 80 {
+        TCP_CHECK {
+                connect_timeout 10
+        }
+    }
+
+EOF
+done
+
+echo "}" >> $conf
+
+####iptables
+if ! iptables -t nat -C POSTROUTING -m ipvs --vaddr 10.0.255.11 --vport 8888 -j MASQUERADE ; then
+	iptables -t nat -A POSTROUTING -m ipvs --vaddr 10.0.255.11 --vport 8888 -j MASQUERADE
+fi
+
+sysctl -p
+
+exec 2>&1
+exec /usr/sbin/keepalived -nlDCI -f /etc/keepalived/ipvs.conf
+

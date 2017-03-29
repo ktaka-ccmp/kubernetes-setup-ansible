@@ -9,7 +9,7 @@
   - vars.yml
 
   vars:
-    other_daemons: [ 'route' ]
+    other_daemons: [ 'route', 'ipvs', 'ipvs_conf' ]
 
   tasks:
 
@@ -44,6 +44,12 @@
     with_items:
       - "{{ other_daemons }}"
     notify: daemon-restart
+
+#  - cron: name="ipvs cronjob" job="svc -h /etc/service/ipvs"
+
+  - sysctl: name=net.ipv4.vs.conntrack value=1 sysctl_set=yes
+  - sysctl: name=net.netfilter.nf_conntrack_max value=2000000 sysctl_set=yes
+  - sysctl: name=net.nf_conntrack_max value=2000000 sysctl_set=yes
 
   handlers:
 

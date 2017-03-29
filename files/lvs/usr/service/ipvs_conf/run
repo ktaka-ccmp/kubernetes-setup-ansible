@@ -1,0 +1,45 @@
+#!/bin/bash
+
+cat <<\EOSCRPT > ./ipvs_conf.sh
+#!/bin/bash
+
+while true ; do
+sleep 10
+
+conf=/etc/keepalived/ipvs.conf 
+
+cat<<EOF> $conf
+virtual_server 10.0.255.11 8888 {
+    delay_loop 5
+    lb_algo wrr
+    lb_kind NAT
+    protocol TCP
+        alpha
+
+EOF
+
+for sv in  $(/usr/local/bin/kubectl get pod -o wide -s http://10.0.0.100:8080 |grep coffe | awk '{print $6}') ; do
+
+cat<<EOF>> $conf
+    real_server $sv 80 {
+	uthreshold 20000
+        TCP_CHECK {
+                connect_timeout 30
+		connect_port    80
+        }
+    }
+
+EOF
+done
+
+echo "}" >> $conf
+
+done
+
+EOSCRPT
+
+chmod +x ./ipvs_conf.sh
+
+exec 2>&1
+exec ./ipvs_conf.sh
+

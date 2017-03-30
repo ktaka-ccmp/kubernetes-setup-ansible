@@ -18,6 +18,7 @@
   - apt: pkg={{ item }} state=present
     with_items:
       - netcat
+      - keepalived
 
   - local_action: shell kubectl label node {{ ansible_hostname }} role=lvs --overwrite
 
@@ -48,8 +49,8 @@
 #  - cron: name="ipvs cronjob" job="svc -h /etc/service/ipvs"
 
   - sysctl: name=net.ipv4.vs.conntrack value=1 sysctl_set=yes
-  - sysctl: name=net.netfilter.nf_conntrack_max value=2000000 sysctl_set=yes
-  - sysctl: name=net.nf_conntrack_max value=2000000 sysctl_set=yes
+  - sysctl: name=net.netfilter.nf_conntrack_max value=20000000 sysctl_set=yes
+  - sysctl: name=net.nf_conntrack_max value=20000000 sysctl_set=yes
 
   handlers:
 

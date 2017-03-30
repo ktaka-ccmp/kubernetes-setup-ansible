@@ -9,24 +9,29 @@ sleep 10
 conf=/etc/keepalived/ipvs.conf 
 
 cat<<EOF> $conf
-virtual_server 10.0.255.11 8888 {
+virtual_server {{ ansible_default_ipv4.address }} 8888 {
     delay_loop 5
-    lb_algo wrr
+    lb_algo lc
     lb_kind NAT
     protocol TCP
-        alpha
+#        alpha
 
 EOF
 
-for sv in  $(/usr/local/bin/kubectl get pod -o wide -s http://10.0.0.100:8080 |grep coffe | awk '{print $6}') ; do
+for sv in  $(/usr/local/bin/kubectl get pod -o wide -s http://{{ hostvars[groups['masters'][0]]['ansible_default_ipv4']['address'] }}:8080 |grep coffe | awk '{print $6}') ; do
 
 cat<<EOF>> $conf
     real_server $sv 80 {
 	uthreshold 20000
-        TCP_CHECK {
-                connect_timeout 30
-		connect_port    80
-        }
+	TCP_CHECK {
+		connect_timeout 5
+		connect_port 80
+	}
+#        MISC_CHECK {
+#                misc_path "/bin/ping -c1 -W10 $sv"
+#                misc_path "/bin/true"
+#		misc_timeout 15
+#        }
     }
 
 EOF

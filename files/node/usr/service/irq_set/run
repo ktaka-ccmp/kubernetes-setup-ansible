@@ -1,0 +1,31 @@
+#!/bin/bash
+
+cat <<\EOSCRPT > ./irq_set.sh
+#!/bin/bash
+
+irq_set(){
+ethtool -L eth0 combined $(cat /proc/interrupts |egrep input|wc -l)
+
+IRQS=$(cat /proc/interrupts |egrep input|cut -f 1 -d :|tr -d '\n')
+
+i=0
+for irq in $IRQS ; do
+        echo $(printf "%x\n" $((0001 << $i))) > /proc/irq/$irq/smp_affinity
+        i=$((i+1))
+done
+
+for irq in $IRQS ; do echo -n  "/proc/irq/$irq/smp_affinity = "; cat /proc/irq/$irq/smp_affinity  ; done
+}
+
+while true ; do
+	irq_set
+	sleep 10
+done
+
+EOSCRPT
+
+chmod +x ./irq_set.sh
+
+exec 2>&1
+exec ./irq_set.sh
+

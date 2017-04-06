@@ -10,7 +10,7 @@
 
   vars:
     kube_daemons: [ ]
-    other_daemons: [ 'flanneld' ]
+    other_daemons: [ 'flanneld', 'irq_set' ]
     packages: 
       - apt-transport-https
       - ca-certificates
@@ -21,6 +21,7 @@
       - tcpdump
       - psmisc
       - dstat
+      - ethtool
 
   tasks:
 

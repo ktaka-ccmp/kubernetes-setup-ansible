@@ -1,0 +1,12 @@
+#!/bin/bash
+
+####iptables
+if ! iptables -t nat -C POSTROUTING -m ipvs --vaddr {{ ansible_default_ipv4.address }} --vport 8888 -j MASQUERADE ; then
+	iptables -t nat -A POSTROUTING -m ipvs --vaddr {{ ansible_default_ipv4.address }} --vport 8888 -j MASQUERADE
+fi
+
+sysctl -p
+
+exec 2>&1
+exec /usr/sbin/keepalived -nlDC -f /etc/keepalived/ipvs.conf
+

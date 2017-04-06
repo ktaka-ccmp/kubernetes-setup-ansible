@@ -1,7 +1,12 @@
 FROM nginx
 MAINTAINER test kube admin
 
-CMD ip add show dev eth0 |egrep inet |cut -f 1 -d / |sed -e "s/.*inet //g"  > /usr/share/nginx/html/index.html \
+ENV location /usr/share/nginx/html
+ENV index $location/index.html 
+ENV coffee $location/coffee
+ENV tea $location/tea
+
+CMD tail -n 1 /etc/hosts |awk '{print $1}'|tee $index $coffee $tea  > /dev/null \
         && /usr/sbin/nginx -g "daemon off;"
 
 

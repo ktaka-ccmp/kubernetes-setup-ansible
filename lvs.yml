@@ -9,7 +9,7 @@
   - vars.yml
 
   vars:
-    other_daemons: [ ]
+    other_daemons: [ 'ipvs', 'ipvs_conf' ]
 
   tasks:
 
@@ -18,8 +18,9 @@
   - apt: pkg={{ item }} state=present
     with_items:
       - netcat
+      - keepalived
 
-  - local_action: shell kubectl label node {{ inventory_hostname }} role=lvs --overwrite
+  - local_action: shell kubectl label node {{ inventory_hostname }} lvs=yes web- --overwrite
 
   - file: path=/usr/service/{{ item }}/log state=directory mode=0755
     with_items:
@@ -50,6 +51,11 @@
   - sysctl:
       name: net.ipv4.conf.eth0.proxy_arp
       value: 1
+
+  - sysctl: name=net.ipv4.vs.conntrack value=1 sysctl_set=yes
+  - sysctl: name=net.netfilter.nf_conntrack_max value=20000000 sysctl_set=yes
+  - sysctl: name=net.nf_conntrack_max value=20000000 sysctl_set=yes
+
 
   handlers:
 

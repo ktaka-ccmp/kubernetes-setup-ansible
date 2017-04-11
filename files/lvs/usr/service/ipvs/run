@@ -8,5 +8,5 @@ fi
 sysctl -p
 
 exec 2>&1
-exec /usr/sbin/keepalived -nlDCI -f /etc/keepalived/ipvs.conf
+exec /usr/sbin/keepalived -nlDC -f /etc/keepalived/ipvs.conf
 

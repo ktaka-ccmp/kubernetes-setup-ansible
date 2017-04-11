@@ -18,20 +18,20 @@ virtual_server {{ ansible_default_ipv4.address }} 8888 {
 
 EOF
 
-for sv in  $(/usr/local/bin/kubectl get pod -o wide -s http://{{ hostvars[groups['masters'][0]]['ansible_default_ipv4']['address'] }}:8080 |grep coffe | awk '{print $6}') ; do
+for sv in  $(/usr/local/bin/kubectl get pod -o wide -s http://{{ hostvars[groups['masters'][0]]['ansible_default_ipv4']['address'] }}:8080 |grep coffe|grep Running | awk '{print $6}') ; do
 
 cat<<EOF>> $conf
     real_server $sv 80 {
 	uthreshold 20000
-	TCP_CHECK {
-		connect_timeout 5
-		connect_port 80
-	}
-#        MISC_CHECK {
+#	TCP_CHECK {
+#		connect_timeout 15
+#		connect_port 80
+#	}
+        MISC_CHECK {
 #                misc_path "/bin/ping -c1 -W10 $sv"
-#                misc_path "/bin/true"
-#		misc_timeout 15
-#        }
+                misc_path "/bin/true"
+		misc_timeout 15
+        }
     }
 
 EOF

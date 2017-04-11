@@ -20,7 +20,7 @@
       - netcat
       - keepalived
 
-  - local_action: shell kubectl label node {{ ansible_hostname }} role=lvs --overwrite
+  - local_action: shell kubectl label node {{ ansible_hostname }} lvs=yes web- --overwrite
 
   - template: src=./files/lvs/etc/network/if-up.d/iptables dest=/etc/network/if-up.d/iptables mode=0755
     notify: add ipt

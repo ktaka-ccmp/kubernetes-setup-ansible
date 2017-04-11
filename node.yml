@@ -2,7 +2,7 @@
 #  ansible-playbook -i ./hosts ./node.yml -vv
 #
 
-- hosts: nodes
+- hosts: nodes, lvs
   sudo: yes
 
   vars_files:
@@ -115,7 +115,7 @@
 #  - copy: src=./files/node/etc/network/interfaces.d/cbr0 dest=/etc/network/interfaces.d/cbr0
 #  - copy: src=./files/node/etc/network/interfaces dest=/etc/network/interfaces
 
-  - local_action: shell kubectl label node {{ ansible_hostname }} role=web --overwrite
+  - local_action: shell kubectl label node {{ ansible_hostname }} web=yes --overwrite
   - copy: src=./files/bench/bench.sh dest=/tmp/bench.sh mode=0755
 
   - sysctl: name=net.ipv4.tcp_tw_reuse value="1" sysctl_set=yes

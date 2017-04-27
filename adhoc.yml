@@ -2,7 +2,7 @@
 #  ansible-playbook -i ./hosts ./adhoc.yml -vv
 #
 
-- hosts: nodes
+- hosts: nodes lvs
   sudo: yes
 
   tasks:

@@ -113,8 +113,11 @@
   - sysctl: name=net.ipv4.tcp_rmem value="4096   8388608   8388608" sysctl_set=yes
   - sysctl: name=net.ipv4.tcp_wmem value="4096   8388608   8388608" sysctl_set=yes reload=yes
 
+  - sysctl: name=net.netfilter.nf_conntrack_max value=20000000 sysctl_set=yes
+  - sysctl: name=net.nf_conntrack_max value=20000000 sysctl_set=yes
+
+  - sysctl: name=net.ipv4.tcp_syn_retries value="3" sysctl_set=yes
+
   handlers:
 
   - name: daemon-restart
-    shell: 'svc -t /etc/service/* ; sleep 3'
-

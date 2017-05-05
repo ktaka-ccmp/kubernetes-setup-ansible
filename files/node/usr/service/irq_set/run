@@ -4,21 +4,40 @@ cat <<\EOSCRPT > ./irq_set.sh
 #!/bin/bash
 
 irq_set(){
-ethtool -L eth0 combined $(cat /proc/interrupts |egrep input|wc -l)
+#ethtool -L eth0 combined $(cat /proc/interrupts |egrep eth0-rx|wc -l)
 
-IRQS=$(cat /proc/interrupts |egrep input|cut -f 1 -d :|tr -d '\n')
+IRQS=$(cat /proc/interrupts |egrep eth0-rx|cut -f 1 -d :|tr -d '\n')
 
 i=0
 for irq in $IRQS ; do
-        echo $(printf "%x\n" $((0001 << $i))) > /proc/irq/$irq/smp_affinity
-        i=$((i+1))
+#        echo $(printf "%x\n" $((2#00000011 << $i))) > /proc/irq/$irq/smp_affinity
+        echo 1 > /proc/irq/$irq/smp_affinity
+        i=$((i+2))
 done
 
 for irq in $IRQS ; do echo -n  "/proc/irq/$irq/smp_affinity = "; cat /proc/irq/$irq/smp_affinity  ; done
 }
 
+rps_set(){
+for file in /sys/class/net/eth0/queues/rx-*/rps_cpus ; do
+	echo 00fe > $file
+done
+}
+
+rfs_set(){
+echo 32768 > /proc/sys/net/core/rps_sock_flow_entries
+
+for file in /sys/class/net/eth0/queues/rx-*/rps_flow_cnt ; do
+	echo 8192 > $file
+done
+}
+
+
+
 while true ; do
 	irq_set
+	rps_set
+	rfs_set
 	sleep 10
 done
 

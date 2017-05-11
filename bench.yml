@@ -121,3 +121,5 @@
   handlers:
 
   - name: daemon-restart
+    shell: 'svc -t /etc/service/* ; sleep 3'
+

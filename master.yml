@@ -20,6 +20,7 @@
       - libpam-systemd
       - tinyproxy
       - apt-cacher-ng
+      - curl
 
   tasks:
 

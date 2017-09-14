@@ -1,17 +1,16 @@
 # Usage:
-#  ansible-playbook -i ./hosts ./node.yml -vv
+#  ansible-playbook -i ./hosts ./bench.yml -vv
 #
 
-- hosts: nodes, lvs
+- hosts: bench
   sudo: yes
 
   vars_files:
   - vars.yml
 
   vars:
-    kube_daemons: [ 'kubelet', 'proxy' ]
-    other_daemons: [ 'flanneld', 'dockerd' ]
-#    other_daemons: [ 'flanneld', 'dockerd', 'irq_set' ]
+    kube_daemons: [ ]
+    other_daemons: [ 'flanneld' ]
     packages: 
       - apt-transport-https
       - ca-certificates
@@ -24,9 +23,6 @@
       - dstat
 
   tasks:
-
-  - copy: src=files/common/etc/hosts dest=/etc/hosts
-  - template: src=files/common/etc/hostname dest=/etc/hostname
 
   - template: src=files/node/etc/apt/apt.conf dest=/etc/apt/apt.conf
   - apt: update_cache=yes
@@ -52,22 +48,8 @@
   - copy: src={{ pki_dir }}/{{ ansible_default_ipv4.address }}.key dest=/var/lib/kubelet/tls/kubelet.key mode=0700
   - copy: src={{ pki_dir }}/{{ ansible_default_ipv4.address }}.crt dest=/var/lib/kubelet/tls/kubelet.crt mode=0700
 
-####################### docker-engine
 
-  - file: path=/etc/apt/sources.list.d/ state=directory mode=0755
-  - template: src=files/common/etc/apt/sources.list.d/docker.list  dest=/etc/apt/sources.list.d/docker.list
-  - shell: while ! apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --keyserver-option http-proxy=http://{{ hostvars[groups['masters'][0]]['ansible_default_ipv4']['address'] }}:8888 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D  ; do echo retrying ; sleep 1 ; done
-
-  - apt: upgrade=yes update_cache=yes
-  - apt: pkg=docker-engine state=present
-  - service: name=docker state=stopped enabled=no
-  - shell: /bin/systemctl mask docker
-#  - shell: /sbin/ip link del dev docker0
-#    ignore_errors: yes
-
-########## 
-
-  - unarchive: src=./files/common/usr/local/bin/{{ item }} dest=/usr/local/bin/ owner=root group=staff mode=0755
+  - unarchive: src=./files/common/usr/local/bin/{{ item }} dest=/usr/local/bin/
     with_items:
       - hyperkube.tar.xz
       - etcdctl.tar.xz
@@ -113,14 +95,7 @@
       - daemontools-run
     notify: daemon-restart
 
-  - copy: src=./files/node/etc/default/grub dest=/etc/default/grub 
-    notify: update-grub
-
-#  - copy: src=./files/node/etc/network/interfaces.d/cbr0 dest=/etc/network/interfaces.d/cbr0
-#  - copy: src=./files/node/etc/network/interfaces dest=/etc/network/interfaces
-
-#  - local_action: shell kubectl label node {{ ansible_hostname }} web=yes --overwrite
-#  - copy: src=./files/bench/bench.sh dest=/tmp/bench.sh mode=0755
+  - copy: src=./files/test/wrk dest=/usr/bin/wrk mode=0755
 
   - sysctl: name=net.ipv4.tcp_tw_reuse value="1" sysctl_set=yes
   - sysctl: name=net.core.somaxconn value="8192" sysctl_set=yes
@@ -129,37 +104,18 @@
   - sysctl: name=net.ipv4.tcp_autocorking value="0" sysctl_set=yes
   - sysctl: name=net.ipv4.tcp_syncookies value="0" sysctl_set=yes
   - sysctl: name=net.ipv4.tcp_max_syn_backlog value="65536" sysctl_set=yes
-
   - sysctl: name=net.core.rmem_max value="8388608" sysctl_set=yes
   - sysctl: name=net.core.wmem_max value="8388608" sysctl_set=yes
   - sysctl: name=net.core.rmem_default value="8388608" sysctl_set=yes
   - sysctl: name=net.core.wmem_default value="8388608" sysctl_set=yes
-
   - sysctl: name=net.ipv4.tcp_mem value="4096   8388608   8388608" sysctl_set=yes
   - sysctl: name=net.ipv4.tcp_rmem value="4096   8388608   8388608" sysctl_set=yes
-  - sysctl: name=net.ipv4.tcp_wmem value="4096   8388608   8388608" sysctl_set=yes
+  - sysctl: name=net.ipv4.tcp_wmem value="4096   8388608   8388608" sysctl_set=yes reload=yes
+
+  - sysctl: name=net.netfilter.nf_conntrack_max value=20000000 sysctl_set=yes
+  - sysctl: name=net.nf_conntrack_max value=20000000 sysctl_set=yes
 
   handlers:
-
-  - name: update-grub
-    shell: update-grub
-    notify: restart-machine
-
-  - name: restart-machine
-    shell: sleep 2 && shutdown -r now "Ansible updates triggered"
-    async: 1
-    poll: 0
-    ignore_errors: true
-    changed_when: True
-    notify: wait-server
-
-  - name: wait-server
-    local_action: wait_for host={{ inventory_hostname }} port=22 state=started delay=20 timeout=120
-    changed_when: True
-    notify: label-node
-
-  - name: label-node
-    local_action: shell kubectl label node {{ ansible_hostname }} web=yes --overwrite
 
   - name: daemon-restart
     shell: 'svc -t /etc/service/* ; sleep 3'

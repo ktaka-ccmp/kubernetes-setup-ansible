@@ -19,7 +19,7 @@
     with_items:
       - netcat
 
-  - local_action: shell kubectl label node {{ ansible_hostname }} role=lvs --overwrite
+  - local_action: shell kubectl label node {{ ansible_hostname }} lvs=yes web- --overwrite
 
   - file: path=/usr/service/{{ item }}/log state=directory mode=0755
     with_items:

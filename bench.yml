@@ -21,6 +21,8 @@
       - tcpdump
       - psmisc
       - dstat
+      - curl
+      - git
 
   tasks:
 

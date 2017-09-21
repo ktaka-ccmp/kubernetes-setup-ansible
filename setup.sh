@@ -7,7 +7,7 @@ sudo pip install markupsafe ansible
 sudo pip install cryptography
 
 HOSTS_FILE=./hosts
-HOSTS=$(sed -e "/^\[.*\]$/d" -e 's/.*=//g' $HOSTS_FILE|sort -u )
+HOSTS=$(sed -e '/^#\.*/d' -e "/^\[.*\]$/d" -e 's/.*=//g' $HOSTS_FILE|sort -u )
 
 for hst in $HOSTS ; do
 	ssh-keygen -R $hst

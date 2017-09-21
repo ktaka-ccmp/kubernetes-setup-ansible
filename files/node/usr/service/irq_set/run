@@ -1,0 +1,72 @@
+#!/bin/bash
+
+cat <<\EOSCRPT > ./irq_set.sh
+#!/bin/bash
+
+rss_set(){
+IRQS=$(cat /proc/interrupts |egrep eth0-TxRx|cut -f 1 -d :|tr -d '\n')
+
+i=0
+for irq in $IRQS ; do
+	case $1 in
+		on|1)
+			flag=$(printf "%x\n" $((2#00000001 << $i)))
+			i=$((i+1))
+			;;
+		*)
+			flag=1 ;;
+	esac
+        echo $flag > /proc/irq/$irq/smp_affinity
+done
+}
+
+rps_set(){
+case $1 in
+	on|1)
+		flag=fffe ;;
+	*)
+		flag=0 ;;
+esac
+
+for file in /sys/class/net/eth0/queues/rx-*/rps_cpus ; do
+        echo $flag > $file
+done
+}
+
+rfs_set(){
+case $1 in
+	on|1)
+		entries=32768
+		cnt=8192
+		;;
+	*)
+		entries=0
+		cnt=0
+		;;
+esac
+
+echo $entries > /proc/sys/net/core/rps_sock_flow_entries
+
+for file in /sys/class/net/eth0/queues/rx-*/rps_flow_cnt ; do
+	echo $cnt > $file
+done
+}
+
+while true ; do
+	if [ ! -f ./env ] ; then
+		echo "RSS=0;RPS=1;RFS=1" > ./env
+	fi
+	. ./env
+	echo "(rss,rps,rfs) = ($RSS,$RPS,$RFS)"
+	rss_set $RSS
+	rps_set $RPS
+	rfs_set $RFS
+	sleep 5
+done
+
+EOSCRPT
+
+chmod +x ./irq_set.sh
+
+exec 2>&1
+exec ./irq_set.sh

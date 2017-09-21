@@ -1,0 +1,11 @@
+# Usage:
+#  ansible-playbook -i ./hosts ./adhoc.yml -vv
+#
+
+- hosts: nodes, lvs, masters, bench
+  sudo: yes
+
+
+  tasks:
+  - copy: src=files/common/etc/hosts dest=/etc/hosts
+

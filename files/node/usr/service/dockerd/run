@@ -19,5 +19,6 @@ exec /usr/bin/dockerd \
 	--iptables=false \
 	--userland-proxy=false \
 	--bip=${FLANNEL_SUBNET} --mtu=${FLANNEL_MTU} --ip-masq=${FLANNEL_IPMASQ} \
-	--insecure-registry {% for host in groups['registry'] %} {{ hostvars[host]['ansible_default_ipv4']['address'] }}:5000 {% endfor %}
+	--insecure-registry {% for host in groups['registry'] %} {{ hostvars[host]['ansible_default_ipv4']['address'] }}:5000 {% endfor %} \
+	--log-opt max-size=50m \
 

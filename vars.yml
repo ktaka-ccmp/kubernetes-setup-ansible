@@ -15,4 +15,5 @@ flannel_iprange: 172.16.0.0/16
 flannel_backend: vxlan
 flannel_subnet_length: 24
 
+k8s_version: v1.8.0
 

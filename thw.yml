@@ -1,0 +1,64 @@
+# Usage:
+#  ansible-playbook -i ./hosts ./thw.yml -vv
+#
+
+- hosts: localhost
+  become: yes
+  become_user: root
+
+  vars_files:
+  - vars.yml
+
+  vars:
+    daemons: [ 'etcd', 'apiserver', 'controller-manager', 'scheduler', 'registry' ]
+    packages: 
+      - apt-transport-https
+      - ca-certificates
+      - bridge-utils
+      - sudo
+      - aptitude
+      - libpam-systemd
+      - tinyproxy
+      - apt-cacher-ng
+
+  tasks:
+
+  - apt: update_cache=yes
+
+  - name: apt-cacher-ng
+    apt: pkg=apt-cacher-ng state=present
+
+  - template: src=./files/master/etc/apt-cacher-ng/acng.conf dest=/etc/apt-cacher-ng/acng.conf
+    register: result
+
+  - service: state=restarted name=apt-cacher-ng
+    when: result|succeeded
+
+  - name: Upgrade packages
+    apt: upgrade=yes
+      update_cache=yes
+
+  - name: Install packages
+    apt: pkg={{ item }} state=present
+    with_items:
+      - "{{ packages }}"
+
+  - name: Download cfssl
+    get_url:
+      url: https://pkg.cfssl.org/R1.2/cfssl_linux-amd64
+      dest: /usr/local/bin/cfssl
+      mode: 0755
+
+  - name: Download cfssljson
+    get_url:
+      url: https://pkg.cfssl.org/R1.2/cfssljson_linux-amd64
+      dest: /usr/local/bin/cfssljson
+      mode: 0755
+
+  - name: Download kubectl
+    get_url:
+      url: https://storage.googleapis.com/kubernetes-release/release/{{ k8s_version }}/bin/linux/amd64/kubectl
+      dest: /usr/local/bin/kubectl
+      mode: 0755
+
+

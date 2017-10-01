@@ -1,6 +1,6 @@
 #!/bin/bash 
 
-sudo aptitude install python-pip python-dev -y
+sudo aptitude install python-pip python-dev python-setuptools -y
 sudo aptitude install gcc libffi-dev libssl-dev git -y
 
 sudo pip install markupsafe ansible
@@ -19,7 +19,7 @@ for hst in $HOSTS ; do
 	ssh $hst "hostname; uptime" || exit
 done
 
-ansible-playbook -i ./hosts ./master.yml -vv
-ansible-playbook -i ./hosts ./node.yml -vv
-ansible-playbook -i ./hosts ./lvs.yml -vv
+#ansible-playbook -i ./hosts ./master.yml -vv
+#ansible-playbook -i ./hosts ./node.yml -vv
+#ansible-playbook -i ./hosts ./lvs.yml -vv
 

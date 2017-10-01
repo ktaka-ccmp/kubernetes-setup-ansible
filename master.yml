@@ -31,6 +31,7 @@
 
   - template: src=./files/master/etc/apt-cacher-ng/acng.conf dest=/etc/apt-cacher-ng/acng.conf
     register: result
+
   - service: state=restarted name=apt-cacher-ng
     when: result|succeeded
 

@@ -12,6 +12,8 @@ pki_dir: /var/lib/KUBE_PKI
 lock_dir: /var/lib/KUBE_PKI/lock_dir
 kubeconfig_dir: /var/lib/kubernetes
 
+cluster_name: k8s-thw
+
 flannel_iprange: 172.16.0.0/16
 flannel_backend: vxlan
 flannel_subnet_length: 24

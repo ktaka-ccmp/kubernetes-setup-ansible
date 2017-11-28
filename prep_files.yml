@@ -1,0 +1,202 @@
+# Usage:
+#  ansible-playbook -i ./hosts ./thw.yml -vv
+#
+
+- hosts: localhost
+  become: yes
+  become_user: root
+
+  vars_files:
+  - vars.yml
+
+  vars:
+    packages: 
+      - apt-transport-https
+      - ca-certificates
+      - sudo
+      - aptitude
+      - libpam-systemd
+      - apt-cacher-ng
+
+  tasks:
+
+  - apt: update_cache=yes
+
+  - name: apt-cacher-ng
+    apt: pkg=apt-cacher-ng state=present
+
+  - template: src=./files/master/etc/apt-cacher-ng/acng.conf dest=/etc/apt-cacher-ng/acng.conf
+    register: result
+
+  - service: state=restarted name=apt-cacher-ng
+    when: result|succeeded
+
+  - name: Upgrade packages
+    apt: upgrade=yes
+      update_cache=yes
+
+  - name: Install packages
+    apt: pkg={{ item }} state=present
+    with_items:
+      - "{{ packages }}"
+
+############ TLS Certificate Setup ##################
+
+  - name: Download cfssl
+    get_url:
+      url: https://pkg.cfssl.org/R1.2/cfssl_linux-amd64
+      dest: /usr/local/bin/cfssl
+      mode: 0755
+      force: yes
+
+  - name: Download cfssljson
+    get_url:
+      url: https://pkg.cfssl.org/R1.2/cfssljson_linux-amd64
+      dest: /usr/local/bin/cfssljson
+      mode: 0755
+      force: yes
+
+  - name: Download kubectl
+    get_url:
+      url: https://storage.googleapis.com/kubernetes-release/release/{{ k8s_version }}/bin/linux/amd64/kubectl
+      dest: /usr/local/bin/kubectl
+      mode: 0755
+      force: yes
+
+  - name: Create PKI directory
+    file: path={{ pki_dir }} state=directory
+
+  - name: Generate the CA certificate and private key
+    shell: cfssl gencert -initca files/pki/ca-csr.json | cfssljson -bare {{ pki_dir }}/ca  
+
+  - name: Generate the Admin Client Certificate
+    shell: cfssl gencert -ca={{ pki_dir }}/ca.pem -ca-key={{ pki_dir }}/ca-key.pem \
+      -config=files/pki/ca-config.json -profile=kubernetes \
+      files/pki/admin-csr.json | cfssljson -bare {{ pki_dir }}/admin
+
+  - name: Generate the kube-proxy Client Certificate
+    shell: cfssl gencert -ca={{ pki_dir }}/ca.pem -ca-key={{ pki_dir }}/ca-key.pem \
+      -config=files/pki/ca-config.json -profile=kubernetes \
+      files/pki/kube-proxy-csr.json | cfssljson -bare {{ pki_dir }}/kube-proxy
+
+  - name: Generate the CSRs for nodes
+    template: src=files/pki/node-csr.json dest={{ pki_dir }}/{{ item }}-csr.json
+    with_items: "{{ groups.nodes }}"
+
+  - name: Gather facts for all
+    setup:
+    delegate_to: "{{item}}"
+    delegate_facts: True
+    with_items: "{{groups.all}}"
+
+  - name: Generate the Client Certificate for nodes
+    shell: cfssl gencert -ca={{ pki_dir }}/ca.pem -ca-key={{ pki_dir }}/ca-key.pem \
+      -config=files/pki/ca-config.json -profile=kubernetes \
+      -hostname={{ item }},{{ hostvars[item]['ansible_default_ipv4']['address'] }} \
+      {{ pki_dir }}/{{ item }}-csr.json | cfssljson -bare {{ pki_dir }}/{{ item }} 
+    with_items: "{{ groups.nodes }}"
+
+  - name: Generate the Kubernetes API Server certificate and private key 
+    shell: cfssl gencert -ca={{ pki_dir }}/ca.pem -ca-key={{ pki_dir }}/ca-key.pem \
+      -config=files/pki/ca-config.json -profile=kubernetes \
+      -hostname=10.32.0.1,{{groups.masters| map('extract', hostvars, ['ansible_default_ipv4', 'address'])|join(',')}},127.0.0.1,kubernetes.default \
+      files/pki/kubernetes-csr.json | cfssljson -bare {{ pki_dir }}/kubernetes
+
+############### kubeconfig setup #########################
+
+  - shell: kubectl config set-cluster {{ cluster_name }} \
+      --certificate-authority={{ pki_dir }}/ca.pem \
+      --embed-certs=true \
+      --server={% for host in groups.masters %}https://{{ hostvars[host]['ansible_default_ipv4']['address'] }}:443{% if not loop.last %},{% endif %}{% endfor %} \
+      --kubeconfig={{ pki_dir }}/{{ item }}.kubeconfig
+    with_items: "{{ groups.nodes }}"
+
+  - shell: kubectl config set-credentials system:node:{{ item }} \
+      --client-certificate={{ pki_dir }}/{{ item }}.pem \
+      --client-key={{ pki_dir }}/{{ item }}-key.pem \
+      --embed-certs=true \
+      --kubeconfig={{ pki_dir }}/{{ item }}.kubeconfig
+    with_items: "{{ groups.nodes }}"
+
+  - shell: kubectl config set-context default \
+      --cluster={{ cluster_name }} \
+      --user=system:node:{{ item }} \
+      --kubeconfig={{ pki_dir }}/{{ item }}.kubeconfig
+    with_items: "{{ groups.nodes }}"
+
+  - shell: kubectl config use-context default --kubeconfig={{ pki_dir }}/{{ item }}.kubeconfig
+    with_items: "{{ groups.nodes }}"
+
+
+  - shell: kubectl config set-cluster {{ cluster_name }} \
+      --certificate-authority={{ pki_dir }}/ca.pem \
+      --embed-certs=true \
+      --server={% for host in groups.masters %}https://{{ hostvars[host]['ansible_default_ipv4']['address'] }}:443{% if not loop.last %},{% endif %}{% endfor %} \
+      --kubeconfig={{ pki_dir }}/kube-proxy.kubeconfig
+
+  - shell: kubectl config set-credentials kube-proxy \
+      --client-certificate={{ pki_dir }}/kube-proxy.pem \
+      --client-key={{ pki_dir }}/kube-proxy-key.pem \
+      --embed-certs=true \
+      --kubeconfig={{ pki_dir }}/kube-proxy.kubeconfig
+
+  - shell: kubectl config set-context default \
+      --cluster={{ cluster_name }} \
+      --user=kube-proxy \
+      --kubeconfig={{ pki_dir }}/kube-proxy.kubeconfig
+
+  - shell: kubectl config use-context default --kubeconfig={{ pki_dir }}/kube-proxy.kubeconfig
+
+########## encryption_key setup ##########
+
+  - shell: head -c 32 /dev/urandom | base64
+    register: encryption_key
+  - template: src=files/pki/encryption-config.yaml dest={{ pki_dir }}/encryption-config.yaml
+
+########## Distribute above  ##################
+
+- hosts: masters  
+  become: yes
+  become_user: root
+
+  vars_files:
+  - vars.yml
+
+  tasks:
+
+  - name: Create Kubeconfig directory
+    file: path={{ kubeconfig_dir }} state=directory
+
+  - name: Copy the certificates and private keys to masters
+    copy: src={{ pki_dir }}/{{ item }} dest={{ kubeconfig_dir }}/{{ item }}
+    with_items: 
+      - ca.pem
+      - ca-key.pem
+      - kubernetes.pem
+      - kubernetes-key.pem
+      - encryption-config.yaml
+
+
+- hosts: nodes  
+  become: yes
+  become_user: root
+
+  vars_files:
+  - vars.yml
+
+  tasks:
+
+  - name: Create Kubeconfig directory
+    file: path={{ kubeconfig_dir }} state=directory
+
+  - name: Copy the certificates and private keys to masters
+    copy: src={{ pki_dir }}/{{ item }} dest={{ kubeconfig_dir }}/{{ item }}
+    with_items: 
+      - ca.pem
+      - "{{ inventory_hostname }}-key.pem"
+      - "{{ inventory_hostname }}.pem"
+      - "{{ inventory_hostname }}.kubeconfig"
+      - kube-proxy.kubeconfig
+
+
+

@@ -10,10 +10,11 @@ eipalocid: eipalloc-f919809e
 
 pki_dir: /var/lib/KUBE_PKI
 lock_dir: /var/lib/KUBE_PKI/lock_dir
+kubeconfig_dir: /var/lib/kubernetes
 
 flannel_iprange: 172.16.0.0/16
 flannel_backend: vxlan
 flannel_subnet_length: 24
 
-k8s_version: v1.8.0
+k8s_version: v1.8.4
 

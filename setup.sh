@@ -23,3 +23,7 @@ done
 #ansible-playbook -i ./hosts ./node.yml -vv
 #ansible-playbook -i ./hosts ./lvs.yml -vv
 
+ansible-playbook -i ./hosts ./prep_files.yml -vv
+ansible-playbook -i ./hosts ./master.yml -vv
+ansible-playbook -i ./hosts ./node.yml -vv
+

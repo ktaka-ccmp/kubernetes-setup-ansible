@@ -1,12 +1,17 @@
 #!/bin/bash
 
 exec 2>&1
-exec /usr/local/bin/controller-manager   \
- 	--master=127.0.0.1:8080 \
-	--node-monitor-grace-period=10s \
-	--pod-eviction-timeout=20s \
-	--service-account-private-key-file=/srv/kubernetes/server.key \
-	--root-ca-file=/srv/kubernetes/ca.crt \
- 	--logtostderr=true \
-	--v 1 \
+exec /usr/local/bin/kube-controller-manager   \
+	--logtostderr=true \
+	--address=0.0.0.0 \
+	--cluster-cidr=10.200.0.0/16 \
+	--cluster-name=kubernetes \
+	--cluster-signing-cert-file=/var/lib/kubernetes/ca.pem \
+	--cluster-signing-key-file=/var/lib/kubernetes/ca-key.pem \
+	--leader-elect=true \
+	--master=http://127.0.0.1:8080 \
+	--root-ca-file=/var/lib/kubernetes/ca.pem \
+	--service-account-private-key-file=/var/lib/kubernetes/ca-key.pem \
+	--service-cluster-ip-range=10.32.0.0/24 \
+	--v=2
 

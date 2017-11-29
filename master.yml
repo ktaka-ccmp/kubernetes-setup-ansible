@@ -1,17 +1,16 @@
-# Usage:
-#  ansible-playbook -i ./hosts ./master.yml -vv
-#
-
-- hosts: masters
-  sudo: yes
-  sudo_user: root
+- hosts: masters 
+  become: yes
+  become_user: root
 
   vars_files:
   - vars.yml
 
+  tasks:
+
   vars:
-    daemons: [ 'etcd', 'apiserver', 'controller-manager', 'scheduler', 'registry' ]
-    packages: 
+    daemons: [ 'etcd', 'apiserver', 'controller-manager', 'scheduler' ]
+#    daemons: [ 'etcd' ]
+    packages:
       - apt-transport-https
       - ca-certificates
       - bridge-utils
@@ -20,6 +19,7 @@
       - libpam-systemd
       - tinyproxy
       - apt-cacher-ng
+      - unzip
 
   tasks:
 
@@ -29,66 +29,49 @@
     with_items:
       - "{{ packages }}"
 
-  - template: src=./files/master/etc/apt-cacher-ng/acng.conf dest=/etc/apt-cacher-ng/acng.conf
-    register: result
-
-  - service: state=restarted name=apt-cacher-ng
-    when: result|succeeded
-
   - apt: upgrade=yes
 
-  - local_action: file path={{ pki_dir }} state=directory
-
-  - local_action: stat path={{ pki_dir }}/ca.key 
-    register: cakey
-  - local_action: stat path={{ pki_dir }}/ca.crt 
-    register: cacrt
-
-  - local_action: shell openssl genrsa -out {{ pki_dir }}/ca.key 2048
-    when: not cakey.stat.exists
-  - local_action: file path={{ pki_dir }}/ca.key state=file mode=700
-
-  - local_action: shell openssl req -x509 -new -nodes -key {{ pki_dir }}/ca.key -subj "/CN={{ ansible_default_ipv4.address }}" -days 10000 -out {{ pki_dir }}/ca.crt
-    when: (not cacrt.stat.exists) or (not cakey.stat.exists)
-
-  - local_action: template src=files/pki/openssl.cnf dest={{ pki_dir }}/{{ ansible_default_ipv4.address }}.cnf
-  - local_action: shell openssl genrsa -out {{ pki_dir }}/{{ ansible_default_ipv4.address }}.key 2048
-  - local_action: shell openssl req -new -key {{ pki_dir }}/{{ ansible_default_ipv4.address }}.key -subj "/CN={{ ansible_default_ipv4.address }}" -out {{ pki_dir }}/{{ ansible_default_ipv4.address }}.csr -config {{ pki_dir }}/{{ ansible_default_ipv4.address }}.cnf
-  - local_action: shell openssl x509 -req -in {{ pki_dir }}/{{ ansible_default_ipv4.address }}.csr -CA {{ pki_dir }}/ca.crt -CAkey {{ pki_dir }}/ca.key -CAcreateserial -out {{ pki_dir }}/{{ ansible_default_ipv4.address }}.crt -days 10000  -extensions v3_req -extfile {{ pki_dir }}/{{ ansible_default_ipv4.address }}.cnf
-
-  - file: path=/srv/kubernetes/ state=directory
-  - copy: src={{ pki_dir }}/ca.crt dest=/srv/kubernetes/ca.crt mode=0700
-  - copy: src={{ pki_dir }}/{{ ansible_default_ipv4.address }}.key dest=/srv/kubernetes/server.key mode=0700
-  - copy: src={{ pki_dir }}/{{ ansible_default_ipv4.address }}.crt dest=/srv/kubernetes/server.crt mode=0700
-
-  - file: path=/etc/apt/sources.list.d/ state=directory mode=0755
-  - template: src=./files/common/etc/apt/sources.list.d/docker.list  dest=/etc/apt/sources.list.d/docker.list
-  - shell: apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
-
-#  - apt: update_cache=yes
-  - apt: upgrade=yes update_cache=yes
-  - apt: pkg=docker-engine state=present
-
-  - template: src=files/master/lib/systemd/system/docker.service dest=/lib/systemd/system/docker.service
-  - shell: systemctl daemon-reload
-  - service: state=restarted name=docker
-
-  - unarchive: src=./files/common/usr/local/bin/{{ item }} dest=/usr/local/bin/
+  - name: Download kubectl
+    get_url:
+      url: https://storage.googleapis.com/kubernetes-release/release/{{ k8s_version }}/bin/linux/amd64/{{ item }}
+      dest: files/common/usr/local/bin/{{ item }}
+      mode: 0755
+      force: yes
     with_items:
-      - etcdctl.tar.xz
-      - etcd.tar.xz
-      - hyperkube.tar.xz
-
-  - file: src=hyperkube dest=/usr/local/bin/{{ item }} state=link
-    with_items:
-      - apiserver
-      - scheduler
-      - controller-manager
-      - federation-apiserver
-      - federation-controller-manager
+      - kube-apiserver
+      - kube-controller-manager
+      - kube-scheduler
       - kubectl
-      - kubelet
-      - proxy
+    run_once: true
+    delegate_to: 127.0.0.1
+
+  - name: Download etcd
+    local_action: shell wget -q https://github.com/coreos/etcd/releases/download/{{ etcd_version }}/etcd-{{ etcd_version }}-linux-amd64.tar.gz -O - \
+      |tar zxvf - -C files/common/usr/local/bin/ etcd-{{ etcd_version }}-linux-amd64/etcd etcd-{{ etcd_version }}-linux-amd64/etcdctl  --strip=1 
+    run_once: true
+
+  - name: Copy binaries 
+    copy: src=files/common/usr/local/bin/{{ item }} dest=/usr/local/bin/{{ item }} mode=0755
+    with_items: 
+      - etcd
+      - etcdctl
+      - kubectl
+      - kube-apiserver
+      - kube-controller-manager
+      - kube-scheduler
+
+  - name: Etcd directory
+    file: path={{ item }} state=directory
+    with_items:
+      - /etc/etcd
+      - /var/lib/etcd
+
+  - name: Copy the certificates and private keys to masters
+    copy: src={{ pki_dir }}/{{ item }} dest=/etc/etcd
+    with_items: 
+      - ca.pem
+      - kubernetes.pem
+      - kubernetes-key.pem
 
   - file: path=/usr/service/{{ item }}/log state=directory mode=0755
     with_items:
@@ -114,41 +97,12 @@
     with_items:
       - daemontools-run
 
-  - shell: 'svc -t /etc/service/* ; sleep 3'
+  - shell: 'svc -t /etc/service/* ; sleep 5'
 
-  - shell: "etcdctl set /coreos.com/network/config '{\"Network\":\"{{ flannel_iprange }}\",\"SubnetLen\":{{ flannel_subnet_length }},\"Backend\":{\"Type\": \"{{ flannel_backend }}\"}}'"
+  - copy: src=files/master/rbac.yml  dest=./rbac.yml 
+    run_once: true
 
-  - file: path=/root/registry/nginx state=directory mode=0755
-  - template: src=files/registry/nginx/Dockerfile dest=/root/registry/nginx/Dockerfile
+  - shell: kubectl apply -f ./rbac.yml
+    run_once: true
 
-  - shell: 'docker build -t test/nginx /root/registry/nginx \
-&& docker tag test/nginx {{ ansible_default_ipv4.address }}:5000/test/nginx \
-&& docker push {{ ansible_default_ipv4.address }}:5000/test/nginx '
-
-  - file: path=/root/registry/vrrp state=directory mode=0755
-  - template: src=files/registry/vrrp/Dockerfile dest=/root/registry/vrrp/Dockerfile
-  - template: src=files/registry/vrrp/vrrp.conf dest=/root/registry/vrrp/vrrp.conf
-  - template: src=files/registry/vrrp/to_master.sh dest=/root/registry/vrrp/to_master.sh mode=0755
-  - template: src=files/registry/vrrp/to_backup.sh dest=/root/registry/vrrp/to_backup.sh mode=0755
-
-  - shell: 'docker build -t test/keepalived /root/registry/vrrp \
-&& docker tag test/keepalived {{ ansible_default_ipv4.address }}:5000/test/keepalived \
-&& docker push {{ ansible_default_ipv4.address }}:5000/test/keepalived '
-
-
-  - local_action: file path=~/KUBE_TEST state=directory mode=755
-
-  - local_action: template src=files/test/{{ item }}  dest=/root/KUBE_TEST/{{ item }}
-    with_items:
-      - nginx.yml
-      - nginx2.yml
-      - nginx3.yml
-
-  - template: src=files/master/etc/tinyproxy.conf dest=/etc/tinyproxy.conf
-    notify: restart-tinyproxy
-
-  handlers:
-
-  - name: restart-tinyproxy
-    service: state=restarted name=tinyproxy
 

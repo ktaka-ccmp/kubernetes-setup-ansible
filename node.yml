@@ -2,7 +2,7 @@
 #  ansible-playbook -i ./hosts ./node.yml -vv
 #
 
-- hosts: nodes,lvs
+- hosts: nodes
   sudo: yes
 
   vars_files:
@@ -10,18 +10,11 @@
 
   vars:
     kube_daemons: [ 'kubelet', 'proxy' ]
-    other_daemons: [ 'flanneld', 'dockerd', 'irq_set' ]
+    other_daemons: [ 'containerd', 'cri-containerd' ]
+#    other_daemons: [ 'flanneld', 'dockerd', 'irq_set' ]
     packages: 
-      - apt-transport-https
-      - ca-certificates
-      - bridge-utils
       - sudo
       - aptitude
-      - libpam-systemd
-      - tcpdump
-      - psmisc
-      - dstat
-      - ethtool
 
   tasks:
 
@@ -34,51 +27,53 @@
 
   - apt: upgrade=yes
 
-########## PKI
-
-  - local_action: file path={{ pki_dir }} state=directory
-
-  - local_action: template src=files/pki/openssl.cnf dest={{ pki_dir }}/{{ ansible_default_ipv4.address }}.cnf
-  - local_action: shell openssl genrsa -out {{ pki_dir }}/{{ ansible_default_ipv4.address }}.key 2048
-  - local_action: shell openssl req -new -key {{ pki_dir }}/{{ ansible_default_ipv4.address }}.key -subj "/CN={{ ansible_default_ipv4.address }}" -out {{ pki_dir }}/{{ ansible_default_ipv4.address }}.csr -config {{ pki_dir }}/{{ ansible_default_ipv4.address }}.cnf
-  - local_action: shell while ! (mkdir {{ lock_dir }} && openssl x509 -req -in {{ pki_dir }}/{{ ansible_default_ipv4.address }}.csr -CA {{ pki_dir }}/ca.crt -CAkey {{ pki_dir }}/ca.key -CAcreateserial -out {{ pki_dir }}/{{ ansible_default_ipv4.address }}.crt -days 10000  -extensions v3_req -extfile {{ pki_dir }}/{{ ansible_default_ipv4.address }}.cnf && rm -r {{ lock_dir }}) ; do sleep 1 ; done
-
-  - file: path=/var/lib/kubelet/tls state=directory
-  - template: src=./files/node/var/lib/kubelet/kubeconfig dest=/var/lib/kubelet/kubeconfig
-  - copy: src={{ pki_dir }}/ca.crt dest=/var/lib/kubelet/tls/ca.crt mode=0700
-  - copy: src={{ pki_dir }}/{{ ansible_default_ipv4.address }}.key dest=/var/lib/kubelet/tls/kubelet.key mode=0700
-  - copy: src={{ pki_dir }}/{{ ansible_default_ipv4.address }}.crt dest=/var/lib/kubelet/tls/kubelet.crt mode=0700
-
-####################### docker-engine
-
-  - file: path=/etc/apt/sources.list.d/ state=directory mode=0755
-  - template: src=files/common/etc/apt/sources.list.d/docker.list  dest=/etc/apt/sources.list.d/docker.list
-  - shell: while ! apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --keyserver-option http-proxy=http://{{ hostvars[groups['masters'][0]]['ansible_default_ipv4']['address'] }}:8888 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D  ; do echo retrying ; sleep 1 ; done
-
-  - apt: upgrade=yes update_cache=yes
-  - apt: pkg=docker-engine state=present
-  - service: name=docker state=stopped enabled=no
-  - shell: /bin/systemctl mask docker
-#  - shell: /sbin/ip link del dev docker0
-#    ignore_errors: yes
-
-########## 
-
-  - unarchive: src=./files/common/usr/local/bin/{{ item }} dest=/usr/local/bin/
+  - name: Download kubectl
+    get_url:
+      url: https://storage.googleapis.com/kubernetes-release/release/{{ k8s_version }}/bin/linux/amd64/{{ item }}
+      dest: files/common/usr/local/bin/{{ item }}
+      mode: 0755
+      force: yes
     with_items:
-      - hyperkube.tar.xz
-      - etcdctl.tar.xz
-      - flanneld.tar.xz
-    notify: daemon-restart
-
-  - file: src=hyperkube dest=/usr/local/bin/{{ item }} state=link
-    with_items:
+      - kube-proxy
+      - kubelet
       - kubectl
+    run_once: true
+    delegate_to: 127.0.0.1
 
-  - file: src=hyperkube dest=/usr/local/bin/{{ item }} state=link
+  - name: k8s directories
+    file: path={{ item }} state=directory
     with_items:
-      - "{{ kube_daemons }}"
-    notify: daemon-restart
+      - /etc/cni/net.d 
+      - /opt/cni/bin
+      - /var/lib/kubernetes
+      - /var/run/kubernetes
+
+  - name: Copy binaries 
+    copy: src=files/common/usr/local/bin/{{ item }} dest=/usr/local/bin/{{ item }} mode=0755
+    with_items: 
+      - kubectl
+      - kubelet
+      - kube-proxy
+
+  - name: Unarchive cni
+    unarchive: 
+      src: https://github.com/containernetworking/plugins/releases/download/{{ cni_version }}/cni-plugins-amd64-{{ cni_version }}.tgz
+      dest: /opt/cni/bin/
+      remote_src: yes
+
+  - name: Unarchive cri
+    unarchive:
+      src: https://github.com/kubernetes-incubator/cri-containerd/releases/download/v{{ cri_version }}/cri-containerd-{{ cri_version }}.tar.gz
+      dest: /
+      exclude: ./etc
+      remote_src: yes
+
+  - name: Copy cni files
+    copy: src=files/node/{{ item }} dest={{ item }} mode=0644
+    with_items: 
+      - /etc/cni/net.d/10-bridge.conf
+      - /etc/cni/net.d/99-loopback.conf
+
 
   - file: path=/usr/service/{{ item }}/log state=directory mode=0755
     with_items:
@@ -110,51 +105,9 @@
       - daemontools-run
     notify: daemon-restart
 
-  - shell: echo hello
-    notify: restart-machine
-
-#  - copy: src=./files/node/etc/default/grub dest=/etc/default/grub 
-#    notify: update-grub
-
-#  - copy: src=./files/node/etc/network/interfaces.d/cbr0 dest=/etc/network/interfaces.d/cbr0
-#  - copy: src=./files/node/etc/network/interfaces dest=/etc/network/interfaces
-
-  - local_action: shell kubectl label node {{ inventory_hostname }} web=yes --overwrite
-  - copy: src=./files/bench/bench.sh dest=/tmp/bench.sh mode=0755
-
-  - sysctl: name=net.ipv4.tcp_tw_reuse value="1" sysctl_set=yes
-  - sysctl: name=net.core.somaxconn value="8192" sysctl_set=yes
-  - sysctl: name=net.core.netdev_max_backlog value="65536" sysctl_set=yes
-  - sysctl: name=net.ipv4.tcp_slow_start_after_idle value="0" sysctl_set=yes
-  - sysctl: name=net.ipv4.tcp_autocorking value="0" sysctl_set=yes
-  - sysctl: name=net.ipv4.tcp_syncookies value="0" sysctl_set=yes
-  - sysctl: name=net.ipv4.tcp_max_syn_backlog value="65536" sysctl_set=yes
-
-  - sysctl: name=net.core.rmem_max value="8388608" sysctl_set=yes
-  - sysctl: name=net.core.wmem_max value="8388608" sysctl_set=yes
-  - sysctl: name=net.core.rmem_default value="8388608" sysctl_set=yes
-  - sysctl: name=net.core.wmem_default value="8388608" sysctl_set=yes
-
-  - sysctl: name=net.ipv4.tcp_mem value="4096   8388608   8388608" sysctl_set=yes
-  - sysctl: name=net.ipv4.tcp_rmem value="4096   8388608   8388608" sysctl_set=yes
-  - sysctl: name=net.ipv4.tcp_wmem value="4096   8388608   8388608" sysctl_set=yes
+  - shell: 'svc -t /etc/service/* ; sleep 5'
 
   handlers:
-
-  - name: update-grub
-    shell: update-grub
-    notify: restart-machine
-
-  - name: restart-machine
-    shell: sleep 2 && shutdown -r now "Ansible updates triggered"
-    async: 1
-    poll: 0
-    ignore_errors: true
-    changed_when: True
-    notify: wait-server
-
-  - name: wait-server
-    local_action: wait_for host={{ inventory_hostname }} port=22 state=started delay=20 timeout=120
 
   - name: daemon-restart
     shell: 'svc -t /etc/service/* ; sleep 3'

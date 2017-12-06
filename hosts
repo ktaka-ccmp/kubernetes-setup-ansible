@@ -15,12 +15,22 @@ kt-v107
 kt-v108
 kt-v109
 kt-v110
+kt-v111
+kt-v112
+kt-v113
+kt-v114
+kt-v115
+kt-v116
+kt-v117
+kt-v118
+kt-v119
+kt-v120
 
 [lvs]
 kt-lvs002
-kt-lvs004
-kt-lvs006
-kt-lvs008
+#kt-lvs004
+#kt-lvs006
+#kt-lvs008
 
 [bench]
 kt-v200

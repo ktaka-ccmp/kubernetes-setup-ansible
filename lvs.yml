@@ -48,6 +48,8 @@
 
 #  - cron: name="ipvs cronjob" job="svc -h /etc/service/ipvs"
 
+  - modprobe: name=nf_conntrack state=present 
+
   - sysctl: name=net.ipv4.vs.conntrack value=1 sysctl_set=yes
   - sysctl: name=net.netfilter.nf_conntrack_max value=20000000 sysctl_set=yes
   - sysctl: name=net.nf_conntrack_max value=20000000 sysctl_set=yes

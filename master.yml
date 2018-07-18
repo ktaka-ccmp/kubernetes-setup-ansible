@@ -143,7 +143,7 @@
       - nginx2.yml
       - nginx3.yml
 
-  - template: src=files/master/etc/tinyproxy.conf dest=/etc/tinyproxy.conf
+  - template: src=files/master/etc/tinyproxy/tinyproxy.conf dest=/etc/tinyproxy/tinyproxy.conf
     notify: restart-tinyproxy
 
   handlers:

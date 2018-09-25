@@ -9,7 +9,8 @@
   - vars.yml
 
   vars:
-    other_daemons: [ 'ipvs', 'ipvs_conf' ]
+#    other_daemons: [ 'ipvs', 'ipvs_conf' ]
+    other_daemons: [ ]
 
   tasks:
 

@@ -1,12 +1,12 @@
 [registry]
-k04
+k02
 
 [masters]
-k04
+k02
 
 [nodes]
-k02
 k03
+k04
 k05
 k06
 k07
@@ -17,6 +17,6 @@ k09
 k10
 
 [bench]
-k11
-k12
 
+[router]
+k11

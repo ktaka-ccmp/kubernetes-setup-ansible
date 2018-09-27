@@ -1,0 +1,42 @@
+#!/bin/bash
+
+cat << EOF > ./config.yml 
+global:
+  config:
+    as: {{ router_as }}
+    router-id: {{ router_ip }}
+    local-address-list:
+    - 0.0.0.0
+
+  use-multiple-paths:
+    config:
+      enabled: true
+
+neighbors:
+    - config:
+        neighbor-address: {{ hostvars[groups['masters'][0]]['ansible_default_ipv4']['address'] }}
+        peer-as: {{ k8s_as }}
+      add-paths:
+        config:
+#          send-max: 8 
+          receive: true
+zebra:
+  config:
+    enabled: true
+    url: unix:/tmp/zserv.api
+    version: 3
+    redistribute-route-type-list: 
+      - static
+#      - connect
+
+mrt-dump:
+  - config:
+      dump-type: table
+      file-name: /tmp/table.dump
+      dump-interval: 60
+EOF
+
+exec 2>&1
+exec /usr/local/bin/gobgpd  \
+	-t yaml -f ./config.yml -l 100 -p
+

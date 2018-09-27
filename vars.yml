@@ -15,4 +15,7 @@ flannel_iprange: 172.16.0.0/16
 flannel_backend: vxlan
 flannel_subnet_length: 24
 
+k8s_as: 65021
+router_as: 65021
+router_ip: 192.168.0.111
 

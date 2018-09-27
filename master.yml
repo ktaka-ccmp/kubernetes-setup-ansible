@@ -10,14 +10,15 @@
   - vars.yml
 
   vars:
-    daemons: [ 'etcd', 'apiserver', 'controller-manager', 'scheduler', 'registry' ]
+#    daemons: [ 'etcd', 'apiserver', 'controller-manager', 'scheduler', 'registry', 'flanneld', 'dockerd' ]
+    daemons: [ 'etcd', 'apiserver', 'controller-manager', 'scheduler', 'registry', 'flanneld' ]
     packages: 
       - apt-transport-https
       - ca-certificates
       - bridge-utils
       - sudo
       - aptitude
-      - libpam-systemd
+#      - libpam-systemd
       - tinyproxy
       - apt-cacher-ng
 
@@ -67,6 +68,8 @@
 #  - apt: update_cache=yes
   - apt: upgrade=yes update_cache=yes
   - apt: pkg=docker-engine state=present
+#  - service: name=docker state=stopped enabled=no
+#  - shell: /bin/systemctl mask docker
 
   - template: src=files/master/lib/systemd/system/docker.service dest=/lib/systemd/system/docker.service
   - shell: systemctl daemon-reload
@@ -77,6 +80,7 @@
       - etcdctl.tar.xz
       - etcd.tar.xz
       - hyperkube.tar.xz
+      - flanneld.tar.xz
 
   - file: src=hyperkube dest=/usr/local/bin/{{ item }} state=link
     with_items:
@@ -115,6 +119,9 @@
 
   - shell: 'svc -t /etc/service/* ; sleep 3'
 
+  - template: src=files/master/etc/tinyproxy/tinyproxy.conf dest=/etc/tinyproxy/tinyproxy.conf
+  - service: state=restarted name=tinyproxy
+
   - shell: "etcdctl set /coreos.com/network/config '{\"Network\":\"{{ flannel_iprange }}\",\"SubnetLen\":{{ flannel_subnet_length }},\"Backend\":{\"Type\": \"{{ flannel_backend }}\"}}'"
 
   - file: path=/root/registry/nginx state=directory mode=0755
@@ -143,11 +150,4 @@
       - nginx2.yml
       - nginx3.yml
 
-  - template: src=files/master/etc/tinyproxy/tinyproxy.conf dest=/etc/tinyproxy/tinyproxy.conf
-    notify: restart-tinyproxy
-
-  handlers:
-
-  - name: restart-tinyproxy
-    service: state=restarted name=tinyproxy
 

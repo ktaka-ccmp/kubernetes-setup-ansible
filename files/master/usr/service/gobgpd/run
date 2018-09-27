@@ -1,0 +1,44 @@
+#!/bin/bash
+
+cat << EOF > ./config.yml 
+global:
+  config:
+    as: {{ k8s_as }}
+    router-id: {{ hostvars[groups['masters'][0]]['ansible_default_ipv4']['address'] }}
+    local-address-list:
+    - 0.0.0.0 # ipv4 only
+  use-multiple-paths:
+    config:
+      enabled: true
+
+peer-groups:
+  - config:
+      peer-group-name: k8s
+      peer-as: {{ router_as }} 
+    afi-safis:
+      - config:
+          afi-safi-name: ipv4-unicast
+
+dynamic-neighbors:
+  - config:
+      prefix: {{ flannel_iprange }}
+      peer-group: k8s
+
+neighbors:
+  - config:
+      neighbor-address: {{ router_ip }}
+      peer-as: {{ router_as }}
+    route-reflector:
+      config:
+        route-reflector-client: true
+        route-reflector-cluster-id: {{ hostvars[groups['masters'][0]]['ansible_default_ipv4']['address'] }}
+    add-paths:
+      config:
+        send-max: 255
+        receive: true
+EOF
+
+exec 2>&1
+exec /usr/local/bin/gobgpd  \
+	-t yaml -f ./config.yml -l 100 -p
+

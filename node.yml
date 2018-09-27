@@ -25,6 +25,8 @@
 
   tasks:
 
+#  - shell: while ! apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --keyserver-option http-proxy=http://{{ hostvars[groups['masters'][0]]['ansible_default_ipv4']['address'] }}:8888 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D  ; do echo retrying ; sleep 1 ; done
+
   - template: src=files/node/etc/apt/apt.conf dest=/etc/apt/apt.conf
   - apt: update_cache=yes
 
@@ -112,8 +114,8 @@
       - daemontools-run
     notify: daemon-restart
 
-  - shell: echo hello
-    notify: restart-machine
+#  - shell: echo hello
+#    notify: restart-machine
 
 #  - copy: src=./files/node/etc/default/grub dest=/etc/default/grub 
 #    notify: update-grub

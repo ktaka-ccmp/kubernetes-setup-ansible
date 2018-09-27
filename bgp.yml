@@ -1,0 +1,98 @@
+# Usage:
+#  ansible-playbook -i ./hosts ./bgp.yml -vv
+#
+
+- hosts: masters
+  sudo: yes
+
+  vars_files:
+  - vars.yml
+
+  vars:
+    other_daemons: [ 'gobgpd' ]
+
+  tasks:
+  - unarchive: src={{ item }} dest=/usr/local/bin/ remote_src=yes
+    with_items:
+      - https://github.com/osrg/gobgp/releases/download/v1.33/gobgp_1.33_linux_amd64.tar.gz
+    notify: daemon-restart
+
+  - file: path=/usr/service/{{ item }}/log state=directory mode=0755
+    with_items:
+      - "{{ other_daemons }}"
+
+  - template: src=./files/master/usr/service/{{ item }}/run dest=/usr/service/{{ item }}/run mode=0700
+    with_items:
+      - "{{ other_daemons }}"
+    notify: daemon-restart
+
+  - template: src=./files/master/usr/service/{{ item }}/log/run dest=/usr/service/{{ item }}/log/run mode=0700
+    with_items:
+      - "{{ other_daemons }}"
+    notify: daemon-restart
+
+  - file: path=/etc/service/ state=directory mode=0755
+
+  - file: src=/usr/service/{{ item }} dest=/etc/service/{{ item }} state=link
+    with_items:
+      - "{{ other_daemons }}"
+    notify: daemon-restart
+
+  handlers:
+
+  - name: daemon-restart
+    shell: 'svc -t /etc/service/{{ item }}'
+    with_items:
+      - "{{ other_daemons }}"
+
+
+- hosts: router
+  sudo: yes
+
+  vars_files:
+  - vars.yml
+
+  vars:
+    other_daemons: [ 'zebra', 'gobgpd' ]
+
+  tasks:
+
+  - apt: pkg={{ item }} state=present
+    with_items:
+      - quagga
+      - daemontools-run
+    notify: daemon-restart
+
+  - unarchive: src={{ item }} dest=/usr/local/bin/ remote_src=yes
+    with_items:
+      - https://github.com/osrg/gobgp/releases/download/v1.33/gobgp_1.33_linux_amd64.tar.gz
+    notify: daemon-restart
+
+  - file: path=/usr/service/{{ item }}/log state=directory mode=0755
+    with_items:
+      - "{{ other_daemons }}"
+
+  - template: src=./files/router/usr/service/{{ item }}/run dest=/usr/service/{{ item }}/run mode=0700
+    with_items:
+      - "{{ other_daemons }}"
+    notify: daemon-restart
+
+  - template: src=./files/router/usr/service/{{ item }}/log/run dest=/usr/service/{{ item }}/log/run mode=0700
+    with_items:
+      - "{{ other_daemons }}"
+    notify: daemon-restart
+
+  - file: path=/etc/service/ state=directory mode=0755
+
+  - file: src=/usr/service/{{ item }} dest=/etc/service/{{ item }} state=link
+    with_items:
+      - "{{ other_daemons }}"
+    notify: daemon-restart
+
+  handlers:
+
+  - name: daemon-restart
+    shell: 'svc -t /etc/service/{{ item }}'
+    with_items:
+      - "{{ other_daemons }}"
+

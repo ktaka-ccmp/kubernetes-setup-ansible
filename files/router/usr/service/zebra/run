@@ -1,0 +1,10 @@
+#!/bin/bash
+
+cat << EOF > ./zebra.conf
+hostname Router
+EOF
+
+exec 2>&1
+exec zebra -A 127.0.0.1 -f ./zebra.conf -i /tmp/zebra.pid -z /tmp/zserv.api
+
+

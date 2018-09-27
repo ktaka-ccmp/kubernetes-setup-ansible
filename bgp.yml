@@ -53,7 +53,7 @@
   - vars.yml
 
   vars:
-    other_daemons: [ 'zebra', 'gobgpd' ]
+    other_daemons: [ 'zebra', 'gobgpd', 'irq_set' ]
 
   tasks:
 

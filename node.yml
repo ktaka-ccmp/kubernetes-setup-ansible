@@ -25,6 +25,8 @@
 
   tasks:
 
+  - local_action: shell ansible -i hosts all -m setup
+
 #  - shell: while ! apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --keyserver-option http-proxy=http://{{ hostvars[groups['masters'][0]]['ansible_default_ipv4']['address'] }}:8888 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D  ; do echo retrying ; sleep 1 ; done
 
   - template: src=files/node/etc/apt/apt.conf dest=/etc/apt/apt.conf
@@ -125,23 +127,9 @@
 
   - local_action: shell kubectl label node {{ inventory_hostname }} web=yes --overwrite
   - copy: src=./files/bench/bench.sh dest=/tmp/bench.sh mode=0755
+  - copy: src=./files/node/root/irq_chk.sh dest=/root/irq_chk.sh mode=0755
 
-  - sysctl: name=net.ipv4.tcp_tw_reuse value="1" sysctl_set=yes
-  - sysctl: name=net.core.somaxconn value="8192" sysctl_set=yes
-  - sysctl: name=net.core.netdev_max_backlog value="65536" sysctl_set=yes
-  - sysctl: name=net.ipv4.tcp_slow_start_after_idle value="0" sysctl_set=yes
-  - sysctl: name=net.ipv4.tcp_autocorking value="0" sysctl_set=yes
-  - sysctl: name=net.ipv4.tcp_syncookies value="0" sysctl_set=yes
-  - sysctl: name=net.ipv4.tcp_max_syn_backlog value="65536" sysctl_set=yes
-
-  - sysctl: name=net.core.rmem_max value="8388608" sysctl_set=yes
-  - sysctl: name=net.core.wmem_max value="8388608" sysctl_set=yes
-  - sysctl: name=net.core.rmem_default value="8388608" sysctl_set=yes
-  - sysctl: name=net.core.wmem_default value="8388608" sysctl_set=yes
-
-  - sysctl: name=net.ipv4.tcp_mem value="4096   8388608   8388608" sysctl_set=yes
-  - sysctl: name=net.ipv4.tcp_rmem value="4096   8388608   8388608" sysctl_set=yes
-  - sysctl: name=net.ipv4.tcp_wmem value="4096   8388608   8388608" sysctl_set=yes
+  - include: sysctl.inc 
 
   handlers:
 

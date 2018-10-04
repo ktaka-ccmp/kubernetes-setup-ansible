@@ -9,8 +9,8 @@
   - vars.yml
 
   vars:
-#    other_daemons: [ 'ipvs', 'ipvs_conf' ]
-    other_daemons: [ ]
+    other_daemons: [ 'ipvs', 'ipvs_conf' ]
+#    other_daemons: [ ]
 
   tasks:
 
@@ -20,6 +20,7 @@
     with_items:
       - netcat
       - keepalived
+      - iptables-persistent
 
   - local_action: shell kubectl label node {{ inventory_hostname }} lvs=yes web- --overwrite
 
@@ -54,20 +55,12 @@
       value: 1
 
   - sysctl: name=net.ipv4.vs.conntrack value=1 sysctl_set=yes
-  - sysctl: name=net.netfilter.nf_conntrack_max value=20000000 sysctl_set=yes
-  - sysctl: name=net.nf_conntrack_max value=20000000 sysctl_set=yes
 
-  - iptables:
-      table: nat
-      action: insert
-      chain: POSTROUTING
-      source: "{{ flannel_iprange }}"
-      destination: "{{ host_iprange }}"
-      protocol: tcp
-      destination_port: 179
-      jump: ACCEPT
-      comment: Bypass nat for bgp
-    become: yes
+  - include: sysctl.inc 
+
+  - file: path=/etc/iptables state=directory mode=0755
+  - template: src=./files/lvs/etc/iptables/rules.v4 dest=/etc/iptables/rules.v4 mode=0700
+  - service: state=restarted name=netfilter-persistent
 
   handlers:
 

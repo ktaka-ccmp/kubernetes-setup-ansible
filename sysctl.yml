@@ -1,0 +1,12 @@
+# Usage:
+#  ansible-playbook -i ./hosts ./sysctl.yml -vv
+#
+
+- hosts: nodes,lvs,router
+  sudo: yes
+
+  tasks:
+
+  - include: sysctl.inc
+
+

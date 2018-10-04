@@ -52,15 +52,37 @@ for file in /sys/class/net/eth0/queues/rx-*/rps_flow_cnt ; do
 done
 }
 
+xps_set(){
+
+IRQS=$(cat /proc/interrupts |egrep eth0-tx|cut -f 1 -d :|tr -d '\n')
+
+for irq in $IRQS ; do
+	flag=2 
+        echo $flag > /proc/irq/$irq/smp_affinity
+done
+
+case $1 in
+	on|1)
+		flag=ffff ;;
+	*)
+		flag=0 ;;
+esac
+
+for file in /sys/class/net/eth0/queues/tx-*/xps_cpus ; do
+        echo $flag > $file
+done
+}
+
 while true ; do
 	if [ ! -f ./env ] ; then
-		echo "RSS=0;RPS=1;RFS=1" > ./env
+		echo "RSS=0;RPS=1;RFS=1;XPS=1" > ./env
 	fi
 	. ./env
-	echo "(rss,rps,rfs) = ($RSS,$RPS,$RFS)"
+	echo "(rss,rps,rfs,xps) = ($RSS,$RPS,$RFS,$XPS)"
 	rss_set $RSS
 	rps_set $RPS
 	rfs_set $RFS
+	xps_set $XPS
 	sleep 5
 done
 

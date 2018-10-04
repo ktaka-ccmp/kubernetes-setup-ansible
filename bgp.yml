@@ -89,6 +89,10 @@
       - "{{ other_daemons }}"
     notify: daemon-restart
 
+  - include: sysctl.inc
+
+  - copy: src=./files/router/root/irq_chk.sh dest=/root/irq_chk.sh mode=0755
+
   handlers:
 
   - name: daemon-restart

@@ -18,7 +18,7 @@ virtual_server {{ ansible_default_ipv4.address }} 8888 {
 
 EOF
 
-for sv in  $(/usr/local/bin/kubectl get pod -o wide -s http://{{ hostvars[groups['masters'][0]]['ansible_default_ipv4']['address'] }}:8080 |grep coffe|grep Running | awk '{print $6}') ; do
+for sv in  $(/usr/local/bin/kubectl get pod -o wide -s http://{{ hostvars[groups['masters'][0]]['ansible_default_ipv4']['address'] }}:8080 |grep tea|grep Running | awk '{print $6}') ; do
 
 cat<<EOF>> $conf
     real_server $sv 80 {

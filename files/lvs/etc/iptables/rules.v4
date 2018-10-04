@@ -1,0 +1,7 @@
+*nat
+:PREROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+-I POSTROUTING -s 172.16.0.0/16 -d 192.168.0.0/24 -p tcp -m tcp --dport 179 -m comment --comment "Bypass nat for bgp" -j ACCEPT
+COMMIT

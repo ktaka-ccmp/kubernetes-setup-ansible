@@ -1,0 +1,31 @@
+  # Usage:
+#  ansible-playbook -i ./hosts ./reboot.yml -vv
+#
+
+- hosts: nodes,lvs
+  sudo: yes
+
+  vars_files:
+  - vars.yml
+
+  vars:
+
+  tasks:
+
+  - shell: echo hello
+    notify: restart-machine
+
+  handlers:
+  - name: restart-machine
+    shell: sleep 2 && shutdown -r now "Ansible updates triggered"
+    async: 1
+    poll: 0
+    ignore_errors: true
+    changed_when: True
+    notify: 
+      - wait-server
+
+  - name: wait-server
+    local_action: wait_for host={{ inventory_hostname }} port=22 state=started delay=20 timeout=600
+
+

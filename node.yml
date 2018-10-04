@@ -110,8 +110,10 @@
       - daemontools-run
     notify: daemon-restart
 
-  - shell: echo hello
-    notify: restart-machine
+#  - shell: echo hello
+#    notify: restart-machine
+
+  - shell: 'svc -t /etc/service/* ; sleep 3'
 
 #  - copy: src=./files/node/etc/default/grub dest=/etc/default/grub 
 #    notify: update-grub

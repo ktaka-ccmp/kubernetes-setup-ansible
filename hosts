@@ -1,20 +1,22 @@
 [registry]
-k04
+k02
 
 [masters]
-k04
+k02
 
 [nodes]
+k03
+k04
 k05
 k06
 k07
+
+[lvs]
 k08
 k09
 k10
 
-[lvs]
-k11
-
 [bench]
-k12
 
+[router]
+k11

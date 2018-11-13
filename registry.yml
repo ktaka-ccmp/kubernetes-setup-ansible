@@ -59,6 +59,15 @@
 && docker tag test/nginx {{ ansible_default_ipv4.address }}:5000/test/nginx \
 && docker push {{ ansible_default_ipv4.address }}:5000/test/nginx '
 
+####### nginx-lvs-tun
+  - file: path=/root/registry/nginx-lvs-tun state=directory mode=0755
+  - template: src=files/registry/nginx-lvs-tun/Dockerfile dest=/root/registry/nginx-lvs-tun/Dockerfile
+  - template: src=files/registry/nginx-lvs-tun/server.sh dest=/root/registry/nginx-lvs-tun/server.sh mode=0755
+
+  - shell: 'docker build -t test/nginx-lvs-tun /root/registry/nginx-lvs-tun \
+&& docker tag test/nginx-lvs-tun {{ ansible_default_ipv4.address }}:5000/test/nginx-lvs-tun \
+&& docker push {{ ansible_default_ipv4.address }}:5000/test/nginx-lvs-tun '
+
 ####### vrrp
   - file: path=/root/registry/vrrp state=directory mode=0755
   - template: src=files/registry/vrrp/Dockerfile dest=/root/registry/vrrp/Dockerfile

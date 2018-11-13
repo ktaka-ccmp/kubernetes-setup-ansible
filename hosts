@@ -1,21 +1,22 @@
 [registry]
-v010
+k04
 
 [masters]
-v010
-
+k04
 
 [nodes]
-v011
-v012
-v013
-v014
-v015
-v016
+k02
+k03
+k05
+k06
+k07
 
 [lvs]
-v017
-v018
+k08
+k09
+k10
 
 [bench]
+k11
+k12
 

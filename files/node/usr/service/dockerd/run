@@ -18,6 +18,7 @@ export http_proxy=http://{{ hostvars[groups['masters'][0]]['ansible_default_ipv4
 exec /usr/bin/dockerd \
 	--iptables=false \
 	--userland-proxy=false \
+	--storage-driver=overlay2 \
 	--bip=${FLANNEL_SUBNET} --mtu=${FLANNEL_MTU} --ip-masq=${FLANNEL_IPMASQ} \
 	--insecure-registry {% for host in groups['registry'] %} {{ hostvars[host]['ansible_default_ipv4']['address'] }}:5000 {% endfor %}
 

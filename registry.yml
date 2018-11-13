@@ -54,6 +54,7 @@
 ####### nginx
   - file: path=/root/registry/nginx state=directory mode=0755
   - template: src=files/registry/nginx/Dockerfile dest=/root/registry/nginx/Dockerfile
+  - template: src=files/registry/nginx/nginx.conf dest=/root/registry/nginx/nginx.conf
 
   - shell: 'docker build -t test/nginx /root/registry/nginx \
 && docker tag test/nginx {{ ansible_default_ipv4.address }}:5000/test/nginx \

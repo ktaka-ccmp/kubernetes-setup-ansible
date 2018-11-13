@@ -55,6 +55,7 @@
       value: 1
 
   - sysctl: name=net.ipv4.vs.conntrack value=1 sysctl_set=yes
+  - sysctl: name=net.ipv4.vs.conn_reuse_mode value=0 sysctl_set=yes
 
   - include: sysctl.inc 
 

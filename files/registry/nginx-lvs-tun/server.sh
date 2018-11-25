@@ -3,6 +3,10 @@
 modprobe ipip
 ip link set dev tunl0 up
 ip route add local 10.1.1.0/24 dev tunl0
+#ip add add dev tunl0 169.254.255.255/32
+#iptables -t nat -A PREROUTING -p tcp  --dport 80 -i tunl0 -j REDIRECT
+
+echo 0 >  /proc/sys/net/ipv4/tcp_syncookies
 
 location=/usr/share/nginx/html
 index=$location/index.html 

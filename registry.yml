@@ -63,6 +63,7 @@
 ####### nginx-lvs-tun
   - file: path=/root/registry/nginx-lvs-tun state=directory mode=0755
   - template: src=files/registry/nginx-lvs-tun/Dockerfile dest=/root/registry/nginx-lvs-tun/Dockerfile
+  - template: src=files/registry/nginx-lvs-tun/nginx.conf dest=/root/registry/nginx-lvs-tun/nginx.conf
   - template: src=files/registry/nginx-lvs-tun/server.sh dest=/root/registry/nginx-lvs-tun/server.sh mode=0755
 
   - shell: 'docker build -t test/nginx-lvs-tun /root/registry/nginx-lvs-tun \
